@@ -213,57 +213,21 @@ namespace plagiarism
             _sw.Close();
         }
 
-        private AsyncCompletedEventHandler DownloadFileCompleted(string filename)
-        {
-            Action<object, AsyncCompletedEventArgs> action = (sender, e) =>
-            {
-                //var _filename = filename;
-                Monitor.Enter(filename);
-                _downloadedfiles++;
-                if (progressBar1.Value + (40 - 12) / _index <= 100)
-                    progressBar1.Value += (40 - 12) / _index;
-                Monitor.Exit(filename);
-                //resultbox.Items.Insert(0, _filename + "скачан");
-            };
-            return new AsyncCompletedEventHandler(action);
-        }
+//         private AsyncCompletedEventHandler DownloadFileCompleted(string filename)
+//         {
+//             Action<object, AsyncCompletedEventArgs> action = (sender, e) =>
+//             {
+//                 //var _filename = filename;
+//                 Monitor.Enter(filename);
+//                 _downloadedfiles++;
+//                 if (progressBar1.Value + (40 - 12) / _index <= 100)
+//                     progressBar1.Value += (40 - 12) / _index;
+//                 Monitor.Exit(filename);
+//                 //resultbox.Items.Insert(0, _filename + "скачан");
+//             };
+//             return new AsyncCompletedEventHandler(action);
+//         }
 
-/*
-        private void DownloadFiles1()
-        {
-            var foundFilesCount = _index;
-            var needed = 0;
-            _downloadedfiles = 0;
-            _sr = new StreamReader("./programfiles/refs.txt", Encoding.UTF8);
-            for (int i = 0; i < foundFilesCount; i++)
-            {
-                try
-                {
-                    var t = _sr.ReadLine();
-                    var filename = t.Substring(t.LastIndexOf('/') + 1);
-                    var client = new WebClient();
-                    client.DownloadFileCompleted += DownloadFileCompleted(filename);
-                    var request = (HttpWebRequest)WebRequest.Create(new Uri(t));
-                    var response = (HttpWebResponse)request.GetResponse();
-                    response.Close();
-                    var filesize = (int)response.ContentLength / 1024;
-                    if (filesize <= 1 || filesize > 10 * 1024)
-                    {
-                        continue;
-                    }
-                    client.DownloadFileAsync(new Uri(t), "./programfiles/" + filesize + "_" +  filename);
-                    needed++;
-                }
-                catch (Exception)
-                {
-
-                    needed--;
-                }
-            }
-            _sr.Close();
-            while (_downloadedfiles < needed) {}
-        }
-*/
 
         private void DownloadFiles()
         {
@@ -295,7 +259,7 @@ namespace plagiarism
             var reference = (string)doWorkEventArgs.Argument;
             var filename = reference.Substring(reference.LastIndexOf('/') + 1);
             var client = new WebClient();
-            client.DownloadFileCompleted += DownloadFileCompleted(filename);
+            client.DownloadFileCompleted += ClientOnDownloadFileCompleted;
             var request = (HttpWebRequest)WebRequest.Create(new Uri(reference));
             var response = (HttpWebResponse)request.GetResponse();
             response.Close();
@@ -316,6 +280,15 @@ namespace plagiarism
             {
                 doWorkEventArgs.Result = "Проверка не проводилась";
             }
+        }
+
+        private void ClientOnDownloadFileCompleted(object sender, AsyncCompletedEventArgs asyncCompletedEventArgs)
+        {
+            Monitor.Enter(asyncCompletedEventArgs);
+            _downloadedfiles++;
+            if (progressBar1.Value + (40 - 12) / _index <= 100)
+                progressBar1.Value += (40 - 12) / _index;
+            Monitor.Exit(asyncCompletedEventArgs);
         }
 
         private string ShingleDetect(string filename, int shilglength)
@@ -378,9 +351,7 @@ namespace plagiarism
                 comparer.RunWorkerCompleted += (sender, args) =>
                     {
                         Monitor.Enter(results);
-                        //results.Text += args.Result;
                         compared++;
-                        //resultbox.Items.Add(args.Result);
                         if (!args.Result.Equals(""))
                         {
                             resultbox.Items.Insert(0, args.Result);
@@ -396,41 +367,7 @@ namespace plagiarism
 
         private void ComparerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
         {
-            //_sw = new StreamWriter("./programfiles/stat(len=" + Shingles.ShingleLength + ").txt", true);
-            var fileinfo = (string)doWorkEventArgs.Argument;
-            var stripper = new PDFTextStripper();
-            const string somecopy = "Несколько строк или абзацев было скопировано отсюда.";
-            const string copypaste = "Весь текст был смодернизирован из этого файла.";
-            const string nocopy = "Отсюда ничего не копировалось";
-            string result = "";
-            PDDocument doc;
-            try
-            {
-                doc = PDDocument.load("./programfiles/" + fileinfo);
-            }
-            catch (Exception)
-            {
-                doWorkEventArgs.Result = fileinfo + " fail";
-                return;
-            }
-            var compText = stripper.getText(doc).ToLower();
-            doc.close();
-            var similarity = (int)_shingles.CompareStrings(_fullText, compText);
-            result += (fileinfo + ": " + similarity + "% плагиата - ");
-            if (similarity < 7)
-            {
-                result += (nocopy);
-            }
-            else if (similarity < 50)
-            {
-                result += (somecopy);
-            }
-            else
-            {
-                result += (copypaste);
-            }
-            result += "\n";
-            doWorkEventArgs.Result = result;
+            doWorkEventArgs.Result = ShingleDetect((string)doWorkEventArgs.Argument, 10);
         }
 
         private void button1_Click(object sender, EventArgs e)
