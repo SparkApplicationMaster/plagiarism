@@ -213,22 +213,6 @@ namespace plagiarism
             _sw.Close();
         }
 
-//         private AsyncCompletedEventHandler DownloadFileCompleted(string filename)
-//         {
-//             Action<object, AsyncCompletedEventArgs> action = (sender, e) =>
-//             {
-//                 //var _filename = filename;
-//                 Monitor.Enter(filename);
-//                 _downloadedfiles++;
-//                 if (progressBar1.Value + (40 - 12) / _index <= 100)
-//                     progressBar1.Value += (40 - 12) / _index;
-//                 Monitor.Exit(filename);
-//                 //resultbox.Items.Insert(0, _filename + "скачан");
-//             };
-//             return new AsyncCompletedEventHandler(action);
-//         }
-
-
         private void DownloadFiles()
         {
             var foundFilesCount = _index;
