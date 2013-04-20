@@ -33,7 +33,7 @@ namespace plagiarism
         private Timer _timer;
         private double _time;
         private int _needed;
-        private volatile int _downloadedfiles;
+        private volatile int _checkedfiles;
         private readonly Shingles _shingles = new Shingles(Delims, 15);
         private Dictionary<string, int> _dictWordCount;
         private readonly OrderedMultiDictionary<int, string> _keyWords = new OrderedMultiDictionary<int, string>
@@ -162,33 +162,25 @@ namespace plagiarism
         private void GoogleRequest()
         {
             var reqstr = new string('\0', 0);
-            reqstr = _keyWords.SelectMany(i => i.Value).Aggregate(reqstr, (current, s) => current.Insert(current.Length, s + "+"));
-            var request = WebRequest.Create("http://www.google.com/search?q=" + reqstr + "+filetype:pdf");
-            request.Method = "GET";
-            var response = request.GetResponse();
-            var dataStream = response.GetResponseStream();
-            _sw = new StreamWriter("./programfiles/google_response.html", false, Encoding.UTF8);
-            if (dataStream == null) return;
-            using (var reader = new StreamReader(dataStream, Encoding.UTF8))
+            reqstr = _keyWords.SelectMany(i => i.Value).Aggregate(reqstr, (current, s) => 
+                current.Insert(current.Length, s + "+"));
+            _response = "";
+            for (int i = 0; i < 20; i += 10)
             {
-                _response = reader.ReadToEnd();
-                _sw.WriteLine(_response);
-                reader.Close();
-            }
-            dataStream.Close();
-            request = WebRequest.Create("http://www.google.com/search?q=" + reqstr + "filetype.pdf" + "&start=10");
-            request.Method = "GET";
-            response = request.GetResponse();
-            dataStream = response.GetResponseStream();
-            if (dataStream == null) return;
-            using (var reader = new StreamReader(dataStream, Encoding.UTF8))
-            {
+                WebRequest request = WebRequest.Create("http://www.google.com/search?q=" 
+                                                       + reqstr + "filetype:pdf" + "&start=" + i);
+                request.Method = "GET";
+                var response = request.GetResponse();
+                var dataStream = response.GetResponseStream();
+                if (dataStream == null) continue;
+                var reader = new StreamReader(dataStream, Encoding.UTF8);
                 _response += reader.ReadToEnd();
-                _sw.WriteLine(_response);
                 reader.Close();
+                dataStream.Close();
+                response.Close();
             }
-            dataStream.Close();
-            response.Close();
+            _sw = new StreamWriter("./programfiles/google_response.html");
+            _sw.WriteLine(_response);
             _sw.Close();
         }
 
@@ -216,11 +208,12 @@ namespace plagiarism
         private void DownloadFiles()
         {
             var foundFilesCount = _index;
-            _downloadedfiles = 0;
+            _checkedfiles = 0;
             _sr = new StreamReader("./programfiles/refs.txt", Encoding.UTF8);
             for (var i = 0; i < foundFilesCount; i++)
             {
-                var backloader = new BackgroundWorker();
+                var backloader = new BackgroundWorker 
+                {WorkerSupportsCancellation = true, WorkerReportsProgress = true};
                 backloader.DoWork += BackloaderOnDoWork;
                 backloader.RunWorkerCompleted += BackloaderOnRunWorkerCompleted;
                 try
@@ -235,7 +228,8 @@ namespace plagiarism
                 }
             }
             _sr.Close();
-            while (_downloadedfiles < _needed) {}
+            while (_checkedfiles < _needed)
+            {}
         }
 
         private void BackloaderOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
@@ -243,46 +237,47 @@ namespace plagiarism
             var reference = (string)doWorkEventArgs.Argument;
             var filename = reference.Substring(reference.LastIndexOf('/') + 1);
             var client = new WebClient();
-            client.DownloadFileCompleted += ClientOnDownloadFileCompleted;
-            var request = (HttpWebRequest)WebRequest.Create(new Uri(reference));
-            var response = (HttpWebResponse)request.GetResponse();
-            response.Close();
-            var filesize = (int)response.ContentLength / 1024;
-            if (filesize > 1 && filesize <= 10*1024)
+            try
             {
-                client.DownloadFile(reference, "./programfiles/" + filename);
+                var request = (HttpWebRequest) WebRequest.Create(new Uri(reference));
+                var response = (HttpWebResponse) request.GetResponse();
+                response.Close();
+                var filesize = (int) response.ContentLength/1024;
+                if (filesize > 1 && filesize <= 10*1024)
+                {
+                    client.DownloadFile(reference, "./programfiles/" + filename);
+                }
+                if (shinglebutton.Checked)
+                {
+                    doWorkEventArgs.Result = ShingleDetect(filename, 10);
+                }
+                else if (kernelbutton.Checked)
+                {
+                    doWorkEventArgs.Result = "Проверка не проводилась";
+                }
+                else
+                {
+                    doWorkEventArgs.Result = "Проверка не проводилась";
+                }
             }
-            if (shinglebutton.Checked)
+            catch (WebException)
             {
-                doWorkEventArgs.Result = ShingleDetect(filename, 10);
+                doWorkEventArgs.Result = "Файл " + filename + " не скачался";
             }
-            else if (kernelbutton.Checked)
+            catch (Exception)
             {
-                doWorkEventArgs.Result = "Проверка не проводилась";
+                doWorkEventArgs.Result = "Проверка " + filename + " не удалась";
             }
-            else
-            {
-                doWorkEventArgs.Result = "Проверка не проводилась";
-            }
-        }
-
-        private void ClientOnDownloadFileCompleted(object sender, AsyncCompletedEventArgs asyncCompletedEventArgs)
-        {
-            Monitor.Enter(asyncCompletedEventArgs);
-            _downloadedfiles++;
-            if (progressBar1.Value + (40 - 12) / _index <= 100)
-                progressBar1.Value += (40 - 12) / _index;
-            Monitor.Exit(asyncCompletedEventArgs);
         }
 
         private string ShingleDetect(string filename, int shilglength)
         {
             _shingles.Length(shilglength);
             var stripper = new PDFTextStripper();
-            const string somecopy = "Несколько строк или абзацев было скопировано отсюда.";
+            const string somecopy = "Немного было скопировано отсюда.";
             const string copypaste = "Весь текст был смодернизирован из этого файла.";
             const string nocopy = "Отсюда ничего не копировалось";
-            string result = "";
+            var result = "";
             PDDocument doc;
             try
             {
@@ -295,7 +290,7 @@ namespace plagiarism
             string compText = stripper.getText(doc).ToLower();
             doc.close();
             var similarity = (int)_shingles.CompareStrings(_fullText, compText);
-            result += (filename + ": " + similarity + " %плагиата - ");
+            result += (filename + ": " + similarity + "% плагиата - ");
             if (similarity < 7)
             {
                 result += (nocopy);
@@ -314,10 +309,13 @@ namespace plagiarism
 
         private void BackloaderOnRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
         {
-            resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
-            progressBar1.Value += (100 - 12) / _needed;
             Monitor.Enter(resultbox);
-            _downloadedfiles++;
+            resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
+            if (progressBar1.Value + (100 - 12)/_needed <= 100)
+            {
+                progressBar1.Value += (100 - 12)/_needed;
+            }
+            _checkedfiles++;
             Monitor.Exit(resultbox);
         }
 
@@ -471,7 +469,7 @@ namespace plagiarism
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             filenamelabel.Visible = true;
-            string filename = openFileDialog1.FileName;
+            var filename = openFileDialog1.FileName;
             filename = filename.Substring(filename.LastIndexOf('\\') + 1);
             filenamelabel.Text = @"Файл выбран: " + filename;
         }
