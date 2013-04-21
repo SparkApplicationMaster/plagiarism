@@ -36,6 +36,10 @@
             this.label1 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.deletecollect = new System.Windows.Forms.Panel();
+            this.shilglelength = new System.Windows.Forms.ComboBox();
+            this.shlabel = new System.Windows.Forms.Label();
+            this.filescount = new System.Windows.Forms.ComboBox();
+            this.filecount = new System.Windows.Forms.Label();
             this.deletecheck = new System.Windows.Forms.CheckBox();
             this.label5 = new System.Windows.Forms.Label();
             this.panel5 = new System.Windows.Forms.Panel();
@@ -68,6 +72,9 @@
             this.label6 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.panel7 = new System.Windows.Forms.Panel();
+            this.panel8 = new System.Windows.Forms.Panel();
+            this.shlenpalen = new System.Windows.Forms.Panel();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.deletecollect.SuspendLayout();
@@ -76,6 +83,9 @@
             this.panel4.SuspendLayout();
             this.panel6.SuspendLayout();
             this.panel3.SuspendLayout();
+            this.panel7.SuspendLayout();
+            this.panel8.SuspendLayout();
+            this.shlenpalen.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog1
@@ -143,21 +153,74 @@
             // 
             // deletecollect
             // 
-            this.deletecollect.Controls.Add(this.deletecheck);
-            this.deletecollect.Controls.Add(this.label5);
+            this.deletecollect.Controls.Add(this.shlenpalen);
+            this.deletecollect.Controls.Add(this.panel8);
+            this.deletecollect.Controls.Add(this.panel7);
             this.deletecollect.Location = new System.Drawing.Point(3, 189);
             this.deletecollect.Margin = new System.Windows.Forms.Padding(0);
             this.deletecollect.Name = "deletecollect";
-            this.deletecollect.Size = new System.Drawing.Size(248, 31);
+            this.deletecollect.Size = new System.Drawing.Size(248, 86);
             this.deletecollect.TabIndex = 14;
             this.deletecollect.Visible = false;
+            // 
+            // shilglelength
+            // 
+            this.shilglelength.FormattingEnabled = true;
+            this.shilglelength.Items.AddRange(new object[] {
+            "5",
+            "10",
+            "15"});
+            this.shilglelength.Location = new System.Drawing.Point(119, 3);
+            this.shilglelength.Name = "shilglelength";
+            this.shilglelength.Size = new System.Drawing.Size(35, 21);
+            this.shilglelength.TabIndex = 9;
+            this.shilglelength.SelectedIndexChanged += new System.EventHandler(this.shilglelength_SelectedIndexChanged);
+            // 
+            // shlabel
+            // 
+            this.shlabel.AutoSize = true;
+            this.shlabel.Location = new System.Drawing.Point(3, 6);
+            this.shlabel.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+            this.shlabel.Name = "shlabel";
+            this.shlabel.Size = new System.Drawing.Size(83, 13);
+            this.shlabel.TabIndex = 8;
+            this.shlabel.Text = "Длина шингла:";
+            // 
+            // filescount
+            // 
+            this.filescount.FormattingEnabled = true;
+            this.filescount.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "10",
+            "15",
+            "20",
+            "30"});
+            this.filescount.Location = new System.Drawing.Point(119, 3);
+            this.filescount.Name = "filescount";
+            this.filescount.Size = new System.Drawing.Size(35, 21);
+            this.filescount.TabIndex = 7;
+            this.filescount.SelectedIndexChanged += new System.EventHandler(this.filescount_SelectedIndexChanged);
+            // 
+            // filecount
+            // 
+            this.filecount.AutoSize = true;
+            this.filecount.Location = new System.Drawing.Point(1, 6);
+            this.filecount.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+            this.filecount.Name = "filecount";
+            this.filecount.Size = new System.Drawing.Size(107, 13);
+            this.filecount.TabIndex = 6;
+            this.filecount.Text = "Файлов проверять:";
             // 
             // deletecheck
             // 
             this.deletecheck.AutoSize = true;
             this.deletecheck.Checked = true;
             this.deletecheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.deletecheck.Location = new System.Drawing.Point(185, 9);
+            this.deletecheck.Location = new System.Drawing.Point(186, 9);
             this.deletecheck.Name = "deletecheck";
             this.deletecheck.Size = new System.Drawing.Size(15, 14);
             this.deletecheck.TabIndex = 5;
@@ -166,7 +229,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(2, 9);
+            this.label5.Location = new System.Drawing.Point(3, 9);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(177, 13);
             this.label5.TabIndex = 4;
@@ -477,13 +540,43 @@
             this.backgroundWorker1.WorkerReportsProgress = true;
             this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
             // 
+            // panel7
+            // 
+            this.panel7.Controls.Add(this.filecount);
+            this.panel7.Controls.Add(this.filescount);
+            this.panel7.Location = new System.Drawing.Point(0, 31);
+            this.panel7.Margin = new System.Windows.Forms.Padding(0);
+            this.panel7.Name = "panel7";
+            this.panel7.Size = new System.Drawing.Size(168, 27);
+            this.panel7.TabIndex = 15;
+            // 
+            // panel8
+            // 
+            this.panel8.Controls.Add(this.label5);
+            this.panel8.Controls.Add(this.deletecheck);
+            this.panel8.Location = new System.Drawing.Point(0, 0);
+            this.panel8.Margin = new System.Windows.Forms.Padding(0);
+            this.panel8.Name = "panel8";
+            this.panel8.Size = new System.Drawing.Size(207, 31);
+            this.panel8.TabIndex = 15;
+            // 
+            // shlenpalen
+            // 
+            this.shlenpalen.Controls.Add(this.shlabel);
+            this.shlenpalen.Controls.Add(this.shilglelength);
+            this.shlenpalen.Location = new System.Drawing.Point(0, 58);
+            this.shlenpalen.Margin = new System.Windows.Forms.Padding(0);
+            this.shlenpalen.Name = "shlenpalen";
+            this.shlenpalen.Size = new System.Drawing.Size(168, 27);
+            this.shlenpalen.TabIndex = 16;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(704, 319);
-            this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
+            this.Controls.Add(this.panel3);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "Form1";
             this.Text = "Form1";
@@ -491,7 +584,6 @@
             this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.deletecollect.ResumeLayout(false);
-            this.deletecollect.PerformLayout();
             this.panel5.ResumeLayout(false);
             this.panel5.PerformLayout();
             this.ShowKeywords.ResumeLayout(false);
@@ -502,6 +594,12 @@
             this.panel6.PerformLayout();
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
+            this.panel7.ResumeLayout(false);
+            this.panel7.PerformLayout();
+            this.panel8.ResumeLayout(false);
+            this.panel8.PerformLayout();
+            this.shlenpalen.ResumeLayout(false);
+            this.shlenpalen.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -547,6 +645,13 @@
         private System.Windows.Forms.Panel deletecollect;
         private System.Windows.Forms.CheckBox deletecheck;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ComboBox filescount;
+        private System.Windows.Forms.Label filecount;
+        private System.Windows.Forms.ComboBox shilglelength;
+        private System.Windows.Forms.Label shlabel;
+        private System.Windows.Forms.Panel shlenpalen;
+        private System.Windows.Forms.Panel panel8;
+        private System.Windows.Forms.Panel panel7;
     }
 }
 
