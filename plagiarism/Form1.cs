@@ -33,8 +33,9 @@ namespace plagiarism
         private Timer _timer;
         private double _time;
         private int _needed;
+        private int _filesneeded;
         private volatile int _checkedfiles;
-        private readonly Shingles _shingles = new Shingles(Delims, 15);
+        private readonly Shingles _shingles = new Shingles(Delims, 5);
         private Dictionary<string, int> _dictWordCount;
         private readonly OrderedMultiDictionary<int, string> _keyWords = new OrderedMultiDictionary<int, string>
                 (true, (i, i1) => -i.CompareTo(i1), (s, s1) => String.Compare(s, s1, StringComparison.Ordinal));
@@ -44,6 +45,8 @@ namespace plagiarism
         public Form1()
         {
             InitializeComponent();
+            shilglelength.SelectedItem = "5";
+            filescount.SelectedItem = "5";
         }
 
         private void ReadFile()
@@ -165,7 +168,7 @@ namespace plagiarism
             reqstr = _keyWords.SelectMany(i => i.Value).Aggregate(reqstr, (current, s) => 
                 current.Insert(current.Length, s + "+"));
             _response = "";
-            for (int i = 0; i < 20; i += 10)
+            for (int i = 0; i < 30; i += 10)
             {
                 WebRequest request = WebRequest.Create("http://www.google.com/search?q=" 
                                                        + reqstr + "filetype:pdf" + "&start=" + i);
@@ -205,9 +208,9 @@ namespace plagiarism
             _sw.Close();
         }
 
-        private void DownloadFiles()
+        private void DownloadFiles(int x = 0)
         {
-            var foundFilesCount = _index;
+            var foundFilesCount = x == 0 ? _index : x;
             _checkedfiles = 0;
             _sr = new StreamReader("./programfiles/refs.txt", Encoding.UTF8);
             for (var i = 0; i < foundFilesCount; i++)
@@ -230,6 +233,13 @@ namespace plagiarism
             _sr.Close();
             while (_checkedfiles < _needed)
             {}
+            _sw = new StreamWriter("./programfiles/results.txt");
+            foreach (var stat in resultbox.Items)
+            {
+                _sw.WriteLine(stat);                
+            }
+            _sw.Close();
+            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.txt в папке programfiles");
         }
 
         private void BackloaderOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
@@ -249,7 +259,7 @@ namespace plagiarism
                 }
                 if (shinglebutton.Checked)
                 {
-                    doWorkEventArgs.Result = ShingleDetect(filename, 10);
+                    doWorkEventArgs.Result += ShingleDetect(filename);
                 }
                 else if (kernelbutton.Checked)
                 {
@@ -270,13 +280,13 @@ namespace plagiarism
             }
         }
 
-        private string ShingleDetect(string filename, int shilglength)
+        private string ShingleDetect(string filename)
         {
-            _shingles.Length(shilglength);
             var stripper = new PDFTextStripper();
-            const string somecopy = "Немного было скопировано отсюда.";
-            const string copypaste = "Весь текст был смодернизирован из этого файла.";
-            const string nocopy = "Отсюда ничего не копировалось";
+            const string somecopy = "Немного было скопировано из ";
+            const string copypaste = "Весь текст был скопирован из ";
+            const string nocopy = "Ничего не копировалось из ";
+            const string alotcopy = "Много копипаста из ";
             var result = "";
             PDDocument doc;
             try
@@ -289,21 +299,28 @@ namespace plagiarism
             }
             string compText = stripper.getText(doc).ToLower();
             doc.close();
-            var similarity = (int)_shingles.CompareStrings(_fullText, compText);
-            result += (filename + ": " + similarity + "% плагиата - ");
+            Monitor.Enter(_fullText);
+            var fulltext = _fullText;
+            Monitor.Exit(_fullText);
+            var similarity = (int)_shingles.CompareStrings(fulltext, compText);
+            result += (similarity + "% совпадения - ");
             if (similarity < 7)
             {
                 result += (nocopy);
             }
-            else if (similarity < 50)
+            else if (similarity < 40)
             {
                 result += (somecopy);
+            }
+            else if (similarity < 80)
+            {
+                result += (alotcopy);
             }
             else
             {
                 result += (copypaste);
             }
-            result += "\n";
+            result += filename;
             return result;
         }
 
@@ -319,12 +336,11 @@ namespace plagiarism
             Monitor.Exit(resultbox);
         }
 
-        private void Statistic(int len)
+        private void Statistic()
         {
             var compared = 0;
             var dirInfo = new DirectoryInfo("./programfiles");
             var enumeratePDFs = dirInfo.EnumerateFiles("*.pdf");
-            _shingles.Length(len);
             var fileInfos = enumeratePDFs as IList<FileInfo> ?? enumeratePDFs.ToList();
             foreach (var fileinfo in fileInfos)
             {
@@ -344,17 +360,20 @@ namespace plagiarism
                     };
                 comparer.RunWorkerAsync(fileinfo.Name);
             }
-            while (compared < fileInfos.Count()) {}
+            while (compared < fileInfos.Count())
+            {
+            }
         }
 
         private void ComparerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
         {
-            doWorkEventArgs.Result = ShingleDetect((string)doWorkEventArgs.Argument, 10);
+            doWorkEventArgs.Result = ShingleDetect((string)doWorkEventArgs.Argument);
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            openFileDialog1.InitialDirectory = @"C:\Users\Евгений\documents\visual studio 2012\Projects\plagiarism\plagiarism\userfiles";
+            openFileDialog1.InitialDirectory = 
+                @"C:\Users\Евгений\documents\visual studio 2012\Projects\plagiarism\plagiarism\userfiles";
             openFileDialog1.ShowDialog();
         }
 
@@ -433,11 +452,11 @@ namespace plagiarism
                         fileinfo.Delete();
                     }
                 }
-                DownloadFiles();
+                DownloadFiles(_filesneeded);
             }
             else
             {
-                Statistic(10);
+                Statistic();
             }
         }
 
@@ -452,12 +471,14 @@ namespace plagiarism
         private void shinglebutton_CheckedChanged(object sender, EventArgs e)
         {
             panel5.Visible = true;
+            shlenpalen.Visible = true;
             deletecollect.Visible = googlebutton.Checked;
         }
 
         private void kernelbutton_CheckedChanged(object sender, EventArgs e)
         {
             panel5.Visible = true;
+            shlenpalen.Visible = false;
             deletecollect.Visible = googlebutton.Checked;
         }
 
@@ -482,6 +503,16 @@ namespace plagiarism
         private void collectionbutton_CheckedChanged(object sender, EventArgs e)
         {
             deletecollect.Visible = false;
+        }
+
+        private void filescount_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _filesneeded = Convert.ToInt32(filescount.SelectedItem);
+        }
+
+        private void shilglelength_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _shingles.ShingleLength = Convert.ToInt32(shilglelength.SelectedItem);
         }
     }
 }
