@@ -51,7 +51,6 @@ namespace dataAnalyze.Algorithms
 
             if (s1.Length <= ShingleLength) return 0.0;
             if (s2.Length <= ShingleLength) return 0.0;
-
             var shingles1 = GetShingles(ref s1, ShingleLength);
             var shingles2 = GetShingles(ref s2, ShingleLength);
             var same = shingles1.Count(shingles2.Contains);
