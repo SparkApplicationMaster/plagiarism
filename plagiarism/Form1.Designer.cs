@@ -1,4 +1,16 @@
-﻿namespace plagiarism
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Web;
+using System.Windows.Forms;
+using Iveonik.Stemmers;
+using org.apache.pdfbox.pdmodel;
+using org.apache.pdfbox.util;
+
+namespace plagiarism
 {
     partial class Form1
     {
@@ -35,20 +47,28 @@
             this.rusbutton = new System.Windows.Forms.RadioButton();
             this.label1 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.collectionsettings = new System.Windows.Forms.Panel();
+            this.panellength = new System.Windows.Forms.Panel();
+            this.label9 = new System.Windows.Forms.Label();
+            this.shinglelength = new System.Windows.Forms.ComboBox();
+            this.panel11 = new System.Windows.Forms.Panel();
+            this.radioButton2 = new System.Windows.Forms.RadioButton();
+            this.radioButton1 = new System.Windows.Forms.RadioButton();
+            this.label7 = new System.Windows.Forms.Label();
+            this.panel12 = new System.Windows.Forms.Panel();
+            this.label8 = new System.Windows.Forms.Label();
+            this.filesformat = new System.Windows.Forms.ComboBox();
             this.deletecollect = new System.Windows.Forms.Panel();
-            this.shilglelength = new System.Windows.Forms.ComboBox();
-            this.shlabel = new System.Windows.Forms.Label();
-            this.filescount = new System.Windows.Forms.ComboBox();
-            this.filecount = new System.Windows.Forms.Label();
-            this.deletecheck = new System.Windows.Forms.CheckBox();
+            this.panel8 = new System.Windows.Forms.Panel();
             this.label5 = new System.Windows.Forms.Label();
+            this.deletecheck = new System.Windows.Forms.CheckBox();
+            this.panel7 = new System.Windows.Forms.Panel();
+            this.filecount = new System.Windows.Forms.Label();
+            this.filescount = new System.Windows.Forms.ComboBox();
             this.panel5 = new System.Windows.Forms.Panel();
             this.collectionbutton = new System.Windows.Forms.RadioButton();
             this.googlebutton = new System.Windows.Forms.RadioButton();
             this.label4 = new System.Windows.Forms.Label();
-            this.ShowKeywords = new System.Windows.Forms.Panel();
-            this.KeywordsCheck = new System.Windows.Forms.CheckBox();
-            this.label2 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
             this.nocompbutton = new System.Windows.Forms.RadioButton();
             this.shinglebutton = new System.Windows.Forms.RadioButton();
@@ -72,20 +92,19 @@
             this.label6 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
-            this.panel7 = new System.Windows.Forms.Panel();
-            this.panel8 = new System.Windows.Forms.Panel();
-            this.shlenpalen = new System.Windows.Forms.Panel();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
+            this.collectionsettings.SuspendLayout();
+            this.panellength.SuspendLayout();
+            this.panel11.SuspendLayout();
+            this.panel12.SuspendLayout();
             this.deletecollect.SuspendLayout();
+            this.panel8.SuspendLayout();
+            this.panel7.SuspendLayout();
             this.panel5.SuspendLayout();
-            this.ShowKeywords.SuspendLayout();
             this.panel4.SuspendLayout();
             this.panel6.SuspendLayout();
             this.panel3.SuspendLayout();
-            this.panel7.SuspendLayout();
-            this.panel8.SuspendLayout();
-            this.shlenpalen.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog1
@@ -136,10 +155,11 @@
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.panellength);
+            this.panel2.Controls.Add(this.collectionsettings);
             this.panel2.Controls.Add(this.deletecollect);
             this.panel2.Controls.Add(this.panel1);
             this.panel2.Controls.Add(this.panel5);
-            this.panel2.Controls.Add(this.ShowKeywords);
             this.panel2.Controls.Add(this.panel4);
             this.panel2.Controls.Add(this.panel6);
             this.panel2.Controls.Add(this.splitter1);
@@ -151,40 +171,188 @@
             this.panel2.Size = new System.Drawing.Size(706, 320);
             this.panel2.TabIndex = 6;
             // 
-            // deletecollect
+            // collectionsettings
             // 
-            this.deletecollect.Controls.Add(this.shlenpalen);
-            this.deletecollect.Controls.Add(this.panel8);
-            this.deletecollect.Controls.Add(this.panel7);
-            this.deletecollect.Location = new System.Drawing.Point(3, 189);
-            this.deletecollect.Margin = new System.Windows.Forms.Padding(0);
-            this.deletecollect.Name = "deletecollect";
-            this.deletecollect.Size = new System.Drawing.Size(248, 86);
-            this.deletecollect.TabIndex = 14;
-            this.deletecollect.Visible = false;
+            this.collectionsettings.Controls.Add(this.panel11);
+            this.collectionsettings.Controls.Add(this.panel12);
+            this.collectionsettings.Location = new System.Drawing.Point(2, 158);
+            this.collectionsettings.Margin = new System.Windows.Forms.Padding(0);
+            this.collectionsettings.Name = "collectionsettings";
+            this.collectionsettings.Size = new System.Drawing.Size(293, 58);
+            this.collectionsettings.TabIndex = 15;
             // 
-            // shilglelength
+            // panellength
             // 
-            this.shilglelength.FormattingEnabled = true;
-            this.shilglelength.Items.AddRange(new object[] {
+            this.panellength.Controls.Add(this.label9);
+            this.panellength.Controls.Add(this.shinglelength);
+            this.panellength.Location = new System.Drawing.Point(3, 216);
+            this.panellength.Margin = new System.Windows.Forms.Padding(0);
+            this.panellength.Name = "panellength";
+            this.panellength.Size = new System.Drawing.Size(168, 27);
+            this.panellength.TabIndex = 20;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(3, 6);
+            this.label9.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(83, 13);
+            this.label9.TabIndex = 8;
+            this.label9.Text = "Длина шингла:";
+            // 
+            // shinglelength
+            // 
+            this.shinglelength.FormattingEnabled = true;
+            this.shinglelength.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
             "5",
             "10",
             "15"});
-            this.shilglelength.Location = new System.Drawing.Point(119, 3);
-            this.shilglelength.Name = "shilglelength";
-            this.shilglelength.Size = new System.Drawing.Size(35, 21);
-            this.shilglelength.TabIndex = 9;
-            this.shilglelength.SelectedIndexChanged += new System.EventHandler(this.shilglelength_SelectedIndexChanged);
+            this.shinglelength.Location = new System.Drawing.Point(119, 3);
+            this.shinglelength.Name = "shinglelength";
+            this.shinglelength.Size = new System.Drawing.Size(35, 21);
+            this.shinglelength.TabIndex = 9;
+            this.shinglelength.SelectedIndexChanged += new System.EventHandler(this.comboBox3_SelectedIndexChanged);
             // 
-            // shlabel
+            // panel11
             // 
-            this.shlabel.AutoSize = true;
-            this.shlabel.Location = new System.Drawing.Point(3, 6);
-            this.shlabel.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-            this.shlabel.Name = "shlabel";
-            this.shlabel.Size = new System.Drawing.Size(83, 13);
-            this.shlabel.TabIndex = 8;
-            this.shlabel.Text = "Длина шингла:";
+            this.panel11.Controls.Add(this.radioButton2);
+            this.panel11.Controls.Add(this.radioButton1);
+            this.panel11.Controls.Add(this.label7);
+            this.panel11.Location = new System.Drawing.Point(0, 0);
+            this.panel11.Margin = new System.Windows.Forms.Padding(0);
+            this.panel11.Name = "panel11";
+            this.panel11.Size = new System.Drawing.Size(288, 31);
+            this.panel11.TabIndex = 15;
+            // 
+            // radioButton2
+            // 
+            this.radioButton2.AutoSize = true;
+            this.radioButton2.Checked = true;
+            this.radioButton2.Location = new System.Drawing.Point(104, 7);
+            this.radioButton2.Name = "radioButton2";
+            this.radioButton2.Size = new System.Drawing.Size(96, 17);
+            this.radioButton2.TabIndex = 7;
+            this.radioButton2.TabStop = true;
+            this.radioButton2.Text = "Входной файл";
+            this.radioButton2.UseVisualStyleBackColor = true;
+            this.radioButton2.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
+            // 
+            // radioButton1
+            // 
+            this.radioButton1.AutoSize = true;
+            this.radioButton1.Location = new System.Drawing.Point(206, 7);
+            this.radioButton1.Name = "radioButton1";
+            this.radioButton1.Size = new System.Drawing.Size(80, 17);
+            this.radioButton1.TabIndex = 8;
+            this.radioButton1.Text = "Коллекция";
+            this.radioButton1.UseVisualStyleBackColor = true;
+            this.radioButton1.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged);
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(3, 9);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(97, 13);
+            this.label7.TabIndex = 4;
+            this.label7.Text = "Что проверяется:";
+            // 
+            // panel12
+            // 
+            this.panel12.Controls.Add(this.label8);
+            this.panel12.Controls.Add(this.filesformat);
+            this.panel12.Location = new System.Drawing.Point(0, 31);
+            this.panel12.Margin = new System.Windows.Forms.Padding(0);
+            this.panel12.Name = "panel12";
+            this.panel12.Size = new System.Drawing.Size(228, 27);
+            this.panel12.TabIndex = 15;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(1, 6);
+            this.label8.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(159, 13);
+            this.label8.TabIndex = 6;
+            this.label8.Text = "Формат файлов в коллекции:";
+            // 
+            // filesformat
+            // 
+            this.filesformat.FormattingEnabled = true;
+            this.filesformat.Items.AddRange(new object[] {
+            "pdf",
+            "txt"});
+            this.filesformat.Location = new System.Drawing.Point(169, 3);
+            this.filesformat.Name = "filesformat";
+            this.filesformat.Size = new System.Drawing.Size(39, 21);
+            this.filesformat.TabIndex = 7;
+            this.filesformat.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
+            // 
+            // deletecollect
+            // 
+            this.deletecollect.Controls.Add(this.panel8);
+            this.deletecollect.Controls.Add(this.panel7);
+            this.deletecollect.Location = new System.Drawing.Point(3, 158);
+            this.deletecollect.Margin = new System.Windows.Forms.Padding(0);
+            this.deletecollect.Name = "deletecollect";
+            this.deletecollect.Size = new System.Drawing.Size(248, 58);
+            this.deletecollect.TabIndex = 14;
+            this.deletecollect.Visible = false;
+            // 
+            // panel8
+            // 
+            this.panel8.Controls.Add(this.label5);
+            this.panel8.Controls.Add(this.deletecheck);
+            this.panel8.Location = new System.Drawing.Point(0, 0);
+            this.panel8.Margin = new System.Windows.Forms.Padding(0);
+            this.panel8.Name = "panel8";
+            this.panel8.Size = new System.Drawing.Size(207, 31);
+            this.panel8.TabIndex = 15;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(3, 9);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(177, 13);
+            this.label5.TabIndex = 4;
+            this.label5.Text = "Удалить имеющуюся коллекцию:";
+            // 
+            // deletecheck
+            // 
+            this.deletecheck.AutoSize = true;
+            this.deletecheck.Checked = true;
+            this.deletecheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.deletecheck.Location = new System.Drawing.Point(186, 9);
+            this.deletecheck.Name = "deletecheck";
+            this.deletecheck.Size = new System.Drawing.Size(15, 14);
+            this.deletecheck.TabIndex = 5;
+            this.deletecheck.UseVisualStyleBackColor = true;
+            // 
+            // panel7
+            // 
+            this.panel7.Controls.Add(this.filecount);
+            this.panel7.Controls.Add(this.filescount);
+            this.panel7.Location = new System.Drawing.Point(0, 31);
+            this.panel7.Margin = new System.Windows.Forms.Padding(0);
+            this.panel7.Name = "panel7";
+            this.panel7.Size = new System.Drawing.Size(168, 27);
+            this.panel7.TabIndex = 15;
+            // 
+            // filecount
+            // 
+            this.filecount.AutoSize = true;
+            this.filecount.Location = new System.Drawing.Point(1, 6);
+            this.filecount.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+            this.filecount.Name = "filecount";
+            this.filecount.Size = new System.Drawing.Size(107, 13);
+            this.filecount.TabIndex = 6;
+            this.filecount.Text = "Файлов проверять:";
             // 
             // filescount
             // 
@@ -205,42 +373,12 @@
             this.filescount.TabIndex = 7;
             this.filescount.SelectedIndexChanged += new System.EventHandler(this.filescount_SelectedIndexChanged);
             // 
-            // filecount
-            // 
-            this.filecount.AutoSize = true;
-            this.filecount.Location = new System.Drawing.Point(1, 6);
-            this.filecount.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-            this.filecount.Name = "filecount";
-            this.filecount.Size = new System.Drawing.Size(107, 13);
-            this.filecount.TabIndex = 6;
-            this.filecount.Text = "Файлов проверять:";
-            // 
-            // deletecheck
-            // 
-            this.deletecheck.AutoSize = true;
-            this.deletecheck.Checked = true;
-            this.deletecheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.deletecheck.Location = new System.Drawing.Point(186, 9);
-            this.deletecheck.Name = "deletecheck";
-            this.deletecheck.Size = new System.Drawing.Size(15, 14);
-            this.deletecheck.TabIndex = 5;
-            this.deletecheck.UseVisualStyleBackColor = true;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(3, 9);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(177, 13);
-            this.label5.TabIndex = 4;
-            this.label5.Text = "Удалить имеющуюся коллекцию:";
-            // 
             // panel5
             // 
             this.panel5.Controls.Add(this.collectionbutton);
             this.panel5.Controls.Add(this.googlebutton);
             this.panel5.Controls.Add(this.label4);
-            this.panel5.Location = new System.Drawing.Point(2, 158);
+            this.panel5.Location = new System.Drawing.Point(2, 127);
             this.panel5.Margin = new System.Windows.Forms.Padding(0);
             this.panel5.Name = "panel5";
             this.panel5.Size = new System.Drawing.Size(299, 31);
@@ -279,41 +417,13 @@
             this.label4.TabIndex = 4;
             this.label4.Text = "Файлы для сравнения:";
             // 
-            // ShowKeywords
-            // 
-            this.ShowKeywords.Controls.Add(this.KeywordsCheck);
-            this.ShowKeywords.Controls.Add(this.label2);
-            this.ShowKeywords.Location = new System.Drawing.Point(2, 96);
-            this.ShowKeywords.Margin = new System.Windows.Forms.Padding(0);
-            this.ShowKeywords.Name = "ShowKeywords";
-            this.ShowKeywords.Size = new System.Drawing.Size(248, 31);
-            this.ShowKeywords.TabIndex = 6;
-            // 
-            // KeywordsCheck
-            // 
-            this.KeywordsCheck.AutoSize = true;
-            this.KeywordsCheck.Location = new System.Drawing.Point(163, 9);
-            this.KeywordsCheck.Name = "KeywordsCheck";
-            this.KeywordsCheck.Size = new System.Drawing.Size(15, 14);
-            this.KeywordsCheck.TabIndex = 5;
-            this.KeywordsCheck.UseVisualStyleBackColor = true;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(2, 9);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(146, 13);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Показать ключевые слова:";
-            // 
             // panel4
             // 
             this.panel4.Controls.Add(this.nocompbutton);
             this.panel4.Controls.Add(this.shinglebutton);
             this.panel4.Controls.Add(this.kernelbutton);
             this.panel4.Controls.Add(this.label3);
-            this.panel4.Location = new System.Drawing.Point(2, 127);
+            this.panel4.Location = new System.Drawing.Point(2, 96);
             this.panel4.Margin = new System.Windows.Forms.Padding(0);
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(340, 31);
@@ -456,6 +566,7 @@
             this.resultbox.Location = new System.Drawing.Point(1, 30);
             this.resultbox.Name = "resultbox";
             this.resultbox.Size = new System.Drawing.Size(702, 147);
+            this.resultbox.Sorted = true;
             this.resultbox.TabIndex = 9;
             // 
             // results
@@ -540,36 +651,6 @@
             this.backgroundWorker1.WorkerReportsProgress = true;
             this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
             // 
-            // panel7
-            // 
-            this.panel7.Controls.Add(this.filecount);
-            this.panel7.Controls.Add(this.filescount);
-            this.panel7.Location = new System.Drawing.Point(0, 31);
-            this.panel7.Margin = new System.Windows.Forms.Padding(0);
-            this.panel7.Name = "panel7";
-            this.panel7.Size = new System.Drawing.Size(168, 27);
-            this.panel7.TabIndex = 15;
-            // 
-            // panel8
-            // 
-            this.panel8.Controls.Add(this.label5);
-            this.panel8.Controls.Add(this.deletecheck);
-            this.panel8.Location = new System.Drawing.Point(0, 0);
-            this.panel8.Margin = new System.Windows.Forms.Padding(0);
-            this.panel8.Name = "panel8";
-            this.panel8.Size = new System.Drawing.Size(207, 31);
-            this.panel8.TabIndex = 15;
-            // 
-            // shlenpalen
-            // 
-            this.shlenpalen.Controls.Add(this.shlabel);
-            this.shlenpalen.Controls.Add(this.shilglelength);
-            this.shlenpalen.Location = new System.Drawing.Point(0, 58);
-            this.shlenpalen.Margin = new System.Windows.Forms.Padding(0);
-            this.shlenpalen.Name = "shlenpalen";
-            this.shlenpalen.Size = new System.Drawing.Size(168, 27);
-            this.shlenpalen.TabIndex = 16;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -583,23 +664,26 @@
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
+            this.collectionsettings.ResumeLayout(false);
+            this.panellength.ResumeLayout(false);
+            this.panellength.PerformLayout();
+            this.panel11.ResumeLayout(false);
+            this.panel11.PerformLayout();
+            this.panel12.ResumeLayout(false);
+            this.panel12.PerformLayout();
             this.deletecollect.ResumeLayout(false);
+            this.panel8.ResumeLayout(false);
+            this.panel8.PerformLayout();
+            this.panel7.ResumeLayout(false);
+            this.panel7.PerformLayout();
             this.panel5.ResumeLayout(false);
             this.panel5.PerformLayout();
-            this.ShowKeywords.ResumeLayout(false);
-            this.ShowKeywords.PerformLayout();
             this.panel4.ResumeLayout(false);
             this.panel4.PerformLayout();
             this.panel6.ResumeLayout(false);
             this.panel6.PerformLayout();
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
-            this.panel7.ResumeLayout(false);
-            this.panel7.PerformLayout();
-            this.panel8.ResumeLayout(false);
-            this.panel8.PerformLayout();
-            this.shlenpalen.ResumeLayout(false);
-            this.shlenpalen.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -613,9 +697,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel3;
-        private System.Windows.Forms.Panel ShowKeywords;
-        private System.Windows.Forms.CheckBox KeywordsCheck;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button start;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Splitter splitter1;
@@ -647,11 +728,148 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ComboBox filescount;
         private System.Windows.Forms.Label filecount;
-        private System.Windows.Forms.ComboBox shilglelength;
-        private System.Windows.Forms.Label shlabel;
-        private System.Windows.Forms.Panel shlenpalen;
         private System.Windows.Forms.Panel panel8;
         private System.Windows.Forms.Panel panel7;
+        private System.Windows.Forms.Panel collectionsettings;
+        private System.Windows.Forms.Panel panel11;
+        private System.Windows.Forms.RadioButton radioButton2;
+        private System.Windows.Forms.RadioButton radioButton1;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Panel panel12;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.ComboBox filesformat;
+        private System.Windows.Forms.Panel panellength;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.ComboBox shinglelength;
+
+        private static string ReadFile(string path, bool inputfile)
+        {
+            string resultstr;
+            switch (path.Substring(path.Length - 3))
+            {
+                case "pdf":
+                    var stripper = new PDFTextStripper();
+                    var doc = PDDocument.load(path);
+                    if (inputfile)
+                    {
+                        var sw = new StreamWriter("./programfiles/suspicious.fail");
+                        sw.WriteLine(resultstr = stripper.getText(doc).ToLower());
+                        sw.Close();
+                    }
+                    else
+                    {
+                        resultstr = stripper.getText(doc).ToLower();
+                    }
+                    doc.close();
+                    break;
+                case "txt":
+                    var sr = new StreamReader(path);
+                    resultstr = sr.ReadToEnd().ToLower();
+                    sr.Close();
+                    break;
+                default:
+                    MessageBox.Show(@"Файл должен быть в формате 'pdf' или 'txt'");
+                    return "";
+            }
+            return resultstr;
+        }
+
+        private void GetKeywords()
+        {
+            var count = _dictWordCount.Count;
+            var keys = new List<string>(count);
+            var vals = new List<int>(count);
+            var trueVals = new List<int>(count);
+            foreach (var i in _dictWordCount)
+            {
+                keys.Add(i.Key);
+                vals.Add(i.Value);
+                trueVals.Add(i.Value);
+            }
+            count = _dictWordCount.Count;
+            for (var i = 1; i < count; i++)
+            {
+                if (_stemmer.Stem(keys[i]) != _stemmer.Stem(keys[i - 1])) continue;
+                if (keys[i].Length > keys[i - 1].Length || trueVals[i] < trueVals[i - 1])
+                {
+                    keys[i] = keys[i - 1];
+                    trueVals[i] = trueVals[i - 1];
+                }
+                vals[i] += vals[i - 1];
+                keys.RemoveAt(i - 1);
+                vals.RemoveAt(i - 1);
+                trueVals.RemoveAt(i - 1);
+                i--;
+                count--;
+            }
+            for (int i = 0; i < count; i++)
+            {
+                _keyWords.Add(vals[i], keys[i]);
+                if (i > 10)
+                {
+                    _keyWords.Remove(_keyWords.Last().Key, _keyWords.Last().Value.Last());
+                }
+            }
+            _sw = new StreamWriter("./programfiles/top_ten.fail");
+            foreach (var i in _keyWords)
+            {
+                _sw.WriteLine(i);
+            }
+            foreach (var i in _keyWords)
+            {
+                foreach (var j in i.Value)
+                {
+                    _sw.Write(j + " ");
+                }
+            }
+            _sw.Close();
+        }
+
+        private void GoogleRequest()
+        {
+            var reqstr = new string('\0', 0);
+            reqstr = _keyWords.SelectMany(i => i.Value).Aggregate(reqstr, (current, s) => 
+                                                                          current.Insert(current.Length, s + "+"));
+            _response = "";
+            for (var i = 0; i < 30; i += 10)
+            {
+                var request = WebRequest.Create("http://www.google.com/search?q=" 
+                                                + reqstr + "filetype:pdf" + "&start=" + i);
+                request.Method = "GET";
+                var response = request.GetResponse();
+                var dataStream = response.GetResponseStream();
+                if (dataStream == null) continue;
+                var reader = new StreamReader(dataStream, Encoding.UTF8);
+                _response += reader.ReadToEnd();
+                reader.Close();
+                dataStream.Close();
+                response.Close();
+            }
+            _sw = new StreamWriter("./programfiles/google_response.html");
+            _sw.WriteLine(_response);
+            _sw.Close();
+        }
+
+        private void GetReferences()
+        {
+            _sw = new StreamWriter("./programfiles/refs.fail",false, Encoding.UTF8);
+            _index = 0;
+            for (var i = 0; i < _response.Length - 6; i++)
+            {
+                if (_response.Substring(i, 6) != "url?q=") continue;
+                int j;
+                for (j = i + 6; j < _response.Length && _response[j] != '&'; j++)
+                {
+                }
+                if (_response.Substring(j - 3, 3) != "pdf") continue;
+                Refs[_index] = _response.Substring(i + 6, j - i - 6);
+                Refs[_index] = HttpUtility.UrlDecode(Refs[_index]);
+                _sw.WriteLine(Refs[_index]);
+                _index++;
+                i = j;
+            }
+            _sw.Close();
+        }
     }
 }
 

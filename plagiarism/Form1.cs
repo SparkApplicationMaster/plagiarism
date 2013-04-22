@@ -6,75 +6,54 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Web;
 using System.Windows.Forms;
 using Iveonik.Stemmers;
 using Wintellect.PowerCollections;
 using dataAnalyze.Algorithms;
-using org.apache.pdfbox.pdmodel;
-using org.apache.pdfbox.util;
 using Timer = System.Windows.Forms.Timer;
 
 namespace plagiarism
 {
     public partial class Form1 : Form
     {
-        private const string Delims = " =.,_{}*\\\n\r\"/?[];:()!\'”";
-        private string _fullText = new string('\0', 0);
-        private StreamWriter _sw;
-        private StreamReader _sr;
-        private readonly PDFTextStripper _stripper = new PDFTextStripper();
-        private PDDocument _doc;
-        private string[] _splitted;
-        private string[] _stopwords;
-        private IStemmer _stemmer;
-        private string _response;
-        private int _index;
-        private Timer _timer;
-        private double _time;
-        private int _needed;
-        private int _filesneeded;
-        private volatile int _checkedfiles;
-        private readonly Shingles _shingles = new Shingles(Delims, 5);
-        private Dictionary<string, int> _dictWordCount;
-        private readonly OrderedMultiDictionary<int, string> _keyWords = new OrderedMultiDictionary<int, string>
-                (true, (i, i1) => -i.CompareTo(i1), (s, s1) => String.Compare(s, s1, StringComparison.Ordinal));
-
+        private const string Delims = " =.,_{}*\\\n\r\"/?[];:()!\'’”„";
         private static readonly string[] Refs = new string[50];
+
+        private readonly OrderedMultiDictionary<int, string> _keyWords = new OrderedMultiDictionary<int, string>
+            (true, (i, i1) => -i.CompareTo(i1), (s, s1) => String.Compare(s, s1, StringComparison.Ordinal));
+
+        private readonly Shingles _shingles = new Shingles(Delims, 10);
+
+        private volatile int _checkedfiles;
+        private string _collectfilesformat;
+        private Dictionary<string, int> _dictWordCount;
+        private int _filesneeded;
+        private string _fullText = new string('\0', 0);
+        private int _index;
+        private int _needed;
+        private string _response;
+        private string[] _splitted;
+        private StreamReader _sr;
+        private IStemmer _stemmer;
+        private string[] _stopwords;
+        private StreamWriter _sw;
+        private double _time;
+        private Timer _timer;
+        private HashSet<string> _subsequense; 
+        private KeyValuePair<string, int>[] _sequense; 
 
         public Form1()
         {
             InitializeComponent();
-            shilglelength.SelectedItem = "5";
+            shinglelength.SelectedItem = "10";
+            shinglelength.SelectedItem = "10";
+            filesformat.SelectedItem = "txt";
             filescount.SelectedItem = "5";
-        }
-
-        private void ReadFile()
-        {
-            var path = openFileDialog1.FileName;
-            switch (path.Substring(path.Length - 3))
-            {
-                case "pdf":
-                    _sw = new StreamWriter("./programfiles/suspicious.txt");
-                    _doc = PDDocument.load(path);
-                    _sw.WriteLine(_fullText = _stripper.getText(_doc).ToLower());
-                    _sw.Close();
-                    _doc.close();
-                    break;
-                case "txt":
-                    _sr = new StreamReader(path);
-                    _fullText = _sr.ReadToEnd().ToLower();
-                    _sr.Close();
-                    break;
-                default:
-                    MessageBox.Show(@"Файл должен быть в формате 'pdf' или 'txt'");
-                    break;
-            }
         }
 
         private void GetDictionary()
         {
-            var stoprd = new StreamReader("./programfiles/stopwords.txt", Encoding.GetEncoding(1251));
+            var stoprd = new StreamReader("./programfiles/stopwords.fail", Encoding.GetEncoding(1251));
             var stop = stoprd.ReadToEnd().ToLower();
             if (rusbutton.Checked)
             {
@@ -86,6 +65,17 @@ namespace plagiarism
             }
             _splitted = _fullText.Split(Delims.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             _stopwords = stop.Split(Delims.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            var unique = new HashSet<string>();
+            _sequense = new KeyValuePair<string, int>[_splitted.Length];
+            var index = 0;
+            for (var i = 0; i < _splitted.Length; i++)
+            {
+                var s = _stemmer.Stem(_splitted[i]);
+                if (unique.Contains(s)) continue;
+                unique.Add(s);
+                _sequense[index++] = new KeyValuePair<string, int>(s, i + 1);
+            }
+            Array.Resize(ref _sequense, index);
             Array.Sort(_splitted);
             Array.Sort(_stopwords);
             _dictWordCount = new Dictionary<string, int>();
@@ -98,125 +88,31 @@ namespace plagiarism
                 {
                     if (s.Length > 3 && (Array.FindIndex(_stopwords, s.Equals) == -1))
                     {
-                        _dictWordCount.Add(_splitted[i - 1], count);
+                        if (!_dictWordCount.ContainsKey(_splitted[i - 1]))
+                        {
+                            _dictWordCount.Add(_splitted[i - 1], count);
+                        }
                     }
                     count = 1;
                 }
             }
-            _sw = new StreamWriter("./programfiles/unstemmed_with_count.txt");
+            _sw = new StreamWriter("./programfiles/unstemmed_with_count.fail");
             foreach (var i in _dictWordCount)
             {
                 _sw.WriteLine(i);
-            }
-            _sw.Close();
-        }
-
-        private void GetKeywords()
-        {
-            int count = _dictWordCount.Count;
-            var keys = new List<string>(count);
-            var vals = new List<int>(count);
-            var trueVals = new List<int>(count);
-            foreach (var i in _dictWordCount)
-            {
-                keys.Add(i.Key);
-                vals.Add(i.Value);
-                trueVals.Add(i.Value);
-            }
-            count = _dictWordCount.Count;
-            for (var i = 1; i < count; i++)
-            {
-                if (_stemmer.Stem(keys[i]) != _stemmer.Stem(keys[i - 1])) continue;
-                if (keys[i].Length > keys[i - 1].Length || trueVals[i] < trueVals[i - 1])
-                {
-                    keys[i] = keys[i - 1];
-                    trueVals[i] = trueVals[i - 1];
-                }
-                vals[i] += vals[i - 1];
-                keys.RemoveAt(i - 1);
-                vals.RemoveAt(i - 1);
-                trueVals.RemoveAt(i - 1);
-                i--;
-                count--;
-            }
-            for (int i = 0; i < count; i++)
-            {
-                _keyWords.Add(vals[i], keys[i]);
-                if (i > 10)
-                {
-                    _keyWords.Remove(_keyWords.Last().Key, _keyWords.Last().Value.Last());
-                }
-            }
-            _sw = new StreamWriter("./programfiles/top_ten.txt");
-            foreach (var i in _keyWords)
-            {
-                _sw.WriteLine(i);
-            }
-            foreach (var i in _keyWords)
-            {
-                foreach (var j in i.Value)
-                {
-                    _sw.Write(j + " ");
-                }
-            }
-            _sw.Close();
-        }
-
-        private void GoogleRequest()
-        {
-            var reqstr = new string('\0', 0);
-            reqstr = _keyWords.SelectMany(i => i.Value).Aggregate(reqstr, (current, s) => 
-                current.Insert(current.Length, s + "+"));
-            _response = "";
-            for (int i = 0; i < 30; i += 10)
-            {
-                WebRequest request = WebRequest.Create("http://www.google.com/search?q=" 
-                                                       + reqstr + "filetype:pdf" + "&start=" + i);
-                request.Method = "GET";
-                var response = request.GetResponse();
-                var dataStream = response.GetResponseStream();
-                if (dataStream == null) continue;
-                var reader = new StreamReader(dataStream, Encoding.UTF8);
-                _response += reader.ReadToEnd();
-                reader.Close();
-                dataStream.Close();
-                response.Close();
-            }
-            _sw = new StreamWriter("./programfiles/google_response.html");
-            _sw.WriteLine(_response);
-            _sw.Close();
-        }
-
-        private void GetReferences()
-        {
-            _sw = new StreamWriter("./programfiles/refs.txt",false, Encoding.UTF8);
-            _index = 0;
-            for (var i = 0; i < _response.Length - 6; i++)
-            {
-                if (_response.Substring(i, 6) != "url?q=") continue;
-                int j;
-                for (j = i + 6; j < _response.Length && _response[j] != '&'; j++)
-                {
-                }
-                if (_response.Substring(j - 3, 3) != "pdf") continue;
-                Refs[_index] = _response.Substring(i + 6, j - i - 6);
-                Refs[_index] = HttpUtility.UrlDecode(Refs[_index]);
-                _sw.WriteLine(Refs[_index]);
-                _index++;
-                i = j;
             }
             _sw.Close();
         }
 
         private void DownloadFiles(int x = 0)
         {
-            var foundFilesCount = x == 0 ? _index : x;
+            var foundFilesCount = x > _index ? _index : x;
             _checkedfiles = 0;
-            _sr = new StreamReader("./programfiles/refs.txt", Encoding.UTF8);
+            _sr = new StreamReader("./programfiles/refs.fail", Encoding.UTF8);
             for (var i = 0; i < foundFilesCount; i++)
             {
-                var backloader = new BackgroundWorker 
-                {WorkerSupportsCancellation = true, WorkerReportsProgress = true};
+                var backloader = new BackgroundWorker
+                    {WorkerSupportsCancellation = true, WorkerReportsProgress = true};
                 backloader.DoWork += BackloaderOnDoWork;
                 backloader.RunWorkerCompleted += BackloaderOnRunWorkerCompleted;
                 try
@@ -232,19 +128,20 @@ namespace plagiarism
             }
             _sr.Close();
             while (_checkedfiles < _needed)
-            {}
-            _sw = new StreamWriter("./programfiles/results.txt");
+            {
+            }
+            _sw = new StreamWriter("./programfiles/results.fail");
             foreach (var stat in resultbox.Items)
             {
-                _sw.WriteLine(stat);                
+                _sw.WriteLine(stat);
             }
             _sw.Close();
-            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.txt в папке programfiles");
+            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
         private void BackloaderOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
         {
-            var reference = (string)doWorkEventArgs.Argument;
+            var reference = (string) doWorkEventArgs.Argument;
             var filename = reference.Substring(reference.LastIndexOf('/') + 1);
             var client = new WebClient();
             try
@@ -282,29 +179,27 @@ namespace plagiarism
 
         private string ShingleDetect(string filename)
         {
-            var stripper = new PDFTextStripper();
             const string somecopy = "Немного было скопировано из ";
             const string copypaste = "Весь текст был скопирован из ";
             const string nocopy = "Ничего не копировалось из ";
             const string alotcopy = "Много копипаста из ";
             var result = "";
-            PDDocument doc;
+            string compText;
             try
             {
-                doc = PDDocument.load("./programfiles/" + filename);
+                compText = ReadFile("./programfiles/" + filename, false);
             }
             catch (Exception)
             {
                 return filename + " fail";
             }
-            string compText = stripper.getText(doc).ToLower();
-            doc.close();
             Monitor.Enter(_fullText);
             var fulltext = _fullText;
             Monitor.Exit(_fullText);
-            var similarity = (int)_shingles.CompareStrings(fulltext, compText);
-            result += (similarity + "% совпадения - ");
-            if (similarity < 7)
+            result += filename + " ";
+            var similarity = (int) _shingles.CompareStrings(fulltext, compText);
+            result += (similarity + "% совпадения");
+            if (similarity < 5)
             {
                 result += (nocopy);
             }
@@ -312,7 +207,7 @@ namespace plagiarism
             {
                 result += (somecopy);
             }
-            else if (similarity < 80)
+            else if (similarity < 70)
             {
                 result += (alotcopy);
             }
@@ -320,11 +215,12 @@ namespace plagiarism
             {
                 result += (copypaste);
             }
-            result += filename;
+            /*result += filename;*/
             return result;
         }
 
-        private void BackloaderOnRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
+        private void BackloaderOnRunWorkerCompleted(object sender,
+            RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
         {
             Monitor.Enter(resultbox);
             resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
@@ -340,8 +236,8 @@ namespace plagiarism
         {
             var compared = 0;
             var dirInfo = new DirectoryInfo("./programfiles");
-            var enumeratePDFs = dirInfo.EnumerateFiles("*.pdf");
-            var fileInfos = enumeratePDFs as IList<FileInfo> ?? enumeratePDFs.ToList();
+            var enumeratefiles = dirInfo.EnumerateFiles("*." + _collectfilesformat);
+            var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
             foreach (var fileinfo in fileInfos)
             {
                 var comparer = new BackgroundWorker();
@@ -354,8 +250,8 @@ namespace plagiarism
                         {
                             resultbox.Items.Insert(0, args.Result);
                         }
-                        if (progressBar1.Value + (100 - 40) / fileInfos.Count() <= 100) 
-                            progressBar1.Value += (100 - 40) / fileInfos.Count();
+                        if (progressBar1.Value + (100 - 40)/fileInfos.Count() < 100)
+                            progressBar1.Value += (100 - 40)/fileInfos.Count();
                         Monitor.Exit(results);
                     };
                 comparer.RunWorkerAsync(fileinfo.Name);
@@ -363,16 +259,31 @@ namespace plagiarism
             while (compared < fileInfos.Count())
             {
             }
+            _sw = new StreamWriter("./programfiles/results.fail");
+            foreach (var stat in resultbox.Items)
+            {
+                _sw.WriteLine(stat);
+            }
+            _sw.Close();
+            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
+
+//         private void Subsequense(KeyValuePair<string, int> [] sequense, int n, int pos)
+//         {
+//             for (int i = pos; i < sequense.Length - n; i++)
+//             {
+//                 
+//             }
+//         }
 
         private void ComparerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
         {
-            doWorkEventArgs.Result = ShingleDetect((string)doWorkEventArgs.Argument);
+            doWorkEventArgs.Result = ShingleDetect((string) doWorkEventArgs.Argument);
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            openFileDialog1.InitialDirectory = 
+            openFileDialog1.InitialDirectory =
                 @"C:\Users\Евгений\documents\visual studio 2012\Projects\plagiarism\plagiarism\userfiles";
             openFileDialog1.ShowDialog();
         }
@@ -388,8 +299,6 @@ namespace plagiarism
             _timer.Start();
             panel3.Visible = true;
             backgroundWorker1.RunWorkerAsync();
-            
-            
         }
 
         private void OnChanged(object o, ProgressChangedEventArgs args)
@@ -434,7 +343,7 @@ namespace plagiarism
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             backgroundWorker1.ReportProgress(0);
-            ReadFile();
+            _fullText = ReadFile(openFileDialog1.FileName, true);
             backgroundWorker1.ReportProgress(10);
             GetDictionary();
             GetKeywords();
@@ -449,7 +358,13 @@ namespace plagiarism
                     var enumeratePDFs = dirInfo.EnumerateFiles("*.pdf");
                     foreach (var fileinfo in enumeratePDFs)
                     {
-                        fileinfo.Delete();
+                        try
+                        {
+                            fileinfo.Delete();
+                        }
+                        catch
+                        {
+                        }
                     }
                 }
                 DownloadFiles(_filesneeded);
@@ -467,23 +382,27 @@ namespace plagiarism
                 progressBar1.Value++;
             }
         }
-        
+
         private void shinglebutton_CheckedChanged(object sender, EventArgs e)
         {
             panel5.Visible = true;
-            shlenpalen.Visible = true;
+            panellength.Visible = true;
+            collectionsettings.Visible = collectionbutton.Checked;
             deletecollect.Visible = googlebutton.Checked;
         }
 
         private void kernelbutton_CheckedChanged(object sender, EventArgs e)
         {
             panel5.Visible = true;
-            shlenpalen.Visible = false;
+            panellength.Visible = false;
+            collectionsettings.Visible = collectionbutton.Checked;
             deletecollect.Visible = googlebutton.Checked;
         }
 
         private void nocompbutton_CheckedChanged(object sender, EventArgs e)
         {
+            panellength.Visible = false;
+            collectionsettings.Visible = false;
             panel5.Visible = deletecollect.Visible = false;
         }
 
@@ -497,11 +416,13 @@ namespace plagiarism
 
         private void googlebutton_CheckedChanged(object sender, EventArgs e)
         {
+            collectionsettings.Visible = false;
             deletecollect.Visible = true;
         }
 
         private void collectionbutton_CheckedChanged(object sender, EventArgs e)
         {
+            collectionsettings.Visible = true;
             deletecollect.Visible = false;
         }
 
@@ -510,9 +431,24 @@ namespace plagiarism
             _filesneeded = Convert.ToInt32(filescount.SelectedItem);
         }
 
-        private void shilglelength_SelectedIndexChanged(object sender, EventArgs e)
+        private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _shingles.ShingleLength = Convert.ToInt32(shilglelength.SelectedItem);
+            _shingles.Length(Convert.ToInt32(shinglelength.SelectedItem));
+        }
+
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _collectfilesformat = (string) filesformat.SelectedItem;
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            Shingles.Checkinputfile = true;
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            Shingles.Checkinputfile = false;
         }
     }
 }

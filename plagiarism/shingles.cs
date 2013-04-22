@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.IO;
-using System.Security.Cryptography;
 
 namespace dataAnalyze.Algorithms
 {
     public class Shingles
     {
-        
+        public static bool Checkinputfile = true;
         private char[] _stopSymbols;
         public int ShingleLength;
 
@@ -53,9 +50,16 @@ namespace dataAnalyze.Algorithms
             if (s2.Length <= ShingleLength) return 0.0;
             var shingles1 = GetShingles(ref s1, ShingleLength);
             var shingles2 = GetShingles(ref s2, ShingleLength);
-            var same = shingles1.Count(shingles2.Contains);
-
-            return same * 2 / ((double)(shingles1.Length + shingles2.Length)) * 100;
+            if (Checkinputfile)
+            {
+                var same = shingles1.Count(shingles2.Contains);
+                return same/((double) (shingles1.Length))*100;
+            }
+            else
+            {
+                var same = shingles2.Count(shingles1.Contains);
+                return same / ((double)(shingles2.Length)) * 100;
+            }
         }
 
 
@@ -103,7 +107,7 @@ namespace dataAnalyze.Algorithms
                     same++;
             }
 
-            return same * 2 / ((double)(shingles1.Length + shingles2.Length)) * 100;
+            return same * 2 / ((double)(/*shingles1.Length + */shingles2.Length)) * 100;
           
         }
 
