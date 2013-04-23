@@ -51,7 +51,9 @@ namespace plagiarism
             this.panel12 = new System.Windows.Forms.Panel();
             this.label8 = new System.Windows.Forms.Label();
             this.filesformat = new System.Windows.Forms.ComboBox();
+            this.collectionbutton = new System.Windows.Forms.RadioButton();
             this.panel11 = new System.Windows.Forms.Panel();
+            this.testbutton = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.label7 = new System.Windows.Forms.Label();
@@ -62,9 +64,8 @@ namespace plagiarism
             this.panel7 = new System.Windows.Forms.Panel();
             this.filecount = new System.Windows.Forms.Label();
             this.filescount = new System.Windows.Forms.ComboBox();
-            this.panel5 = new System.Windows.Forms.Panel();
-            this.collectionbutton = new System.Windows.Forms.RadioButton();
             this.googlebutton = new System.Windows.Forms.RadioButton();
+            this.panel5 = new System.Windows.Forms.Panel();
             this.label4 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
             this.nocompbutton = new System.Windows.Forms.RadioButton();
@@ -175,7 +176,7 @@ namespace plagiarism
             this.collectionsettings.Name = "collectionsettings";
             this.collectionsettings.Size = new System.Drawing.Size(293, 41);
             this.collectionsettings.TabIndex = 15;
-            this.collectionsettings.Visible = collectionbutton.Checked;
+            this.collectionsettings.Visible = this.collectionbutton.Checked;
             // 
             // panel12
             // 
@@ -209,6 +210,17 @@ namespace plagiarism
             this.filesformat.TabIndex = 7;
             this.filesformat.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
             // 
+            // collectionbutton
+            // 
+            this.collectionbutton.AutoSize = true;
+            this.collectionbutton.Location = new System.Drawing.Point(212, 7);
+            this.collectionbutton.Name = "collectionbutton";
+            this.collectionbutton.Size = new System.Drawing.Size(80, 17);
+            this.collectionbutton.TabIndex = 6;
+            this.collectionbutton.Text = "Коллекция";
+            this.collectionbutton.UseVisualStyleBackColor = true;
+            this.collectionbutton.CheckedChanged += new System.EventHandler(this.collectionbutton_CheckedChanged);
+            // 
             // panel11
             // 
             this.panel11.Controls.Add(this.radioButton2);
@@ -217,8 +229,19 @@ namespace plagiarism
             this.panel11.Location = new System.Drawing.Point(3, 158);
             this.panel11.Margin = new System.Windows.Forms.Padding(0);
             this.panel11.Name = "panel11";
-            this.panel11.Size = new System.Drawing.Size(288, 31);
+            this.panel11.Size = new System.Drawing.Size(292, 31);
             this.panel11.TabIndex = 15;
+            // 
+            // testbutton
+            // 
+            this.testbutton.AutoSize = true;
+            this.testbutton.Location = new System.Drawing.Point(298, 7);
+            this.testbutton.Name = "testbutton";
+            this.testbutton.Size = new System.Drawing.Size(53, 17);
+            this.testbutton.TabIndex = 9;
+            this.testbutton.Text = "TECT";
+            this.testbutton.UseVisualStyleBackColor = true;
+            this.testbutton.CheckedChanged += new System.EventHandler(this.testbutton_CheckedChanged);
             // 
             // radioButton2
             // 
@@ -253,19 +276,6 @@ namespace plagiarism
             this.label7.TabIndex = 4;
             this.label7.Text = "Что проверяется:";
             // 
-            // googlebutton
-            // 
-            this.googlebutton.AutoSize = true;
-            this.googlebutton.Checked = true;
-            this.googlebutton.Location = new System.Drawing.Point(133, 7);
-            this.googlebutton.Name = "googlebutton";
-            this.googlebutton.Size = new System.Drawing.Size(73, 17);
-            this.googlebutton.TabIndex = 5;
-            this.googlebutton.TabStop = true;
-            this.googlebutton.Text = "Интернет";
-            this.googlebutton.UseVisualStyleBackColor = true;
-            this.googlebutton.CheckedChanged += new System.EventHandler(this.googlebutton_CheckedChanged);
-            // 
             // googlesettings
             // 
             this.googlesettings.Controls.Add(this.panel8);
@@ -275,7 +285,7 @@ namespace plagiarism
             this.googlesettings.Name = "googlesettings";
             this.googlesettings.Size = new System.Drawing.Size(248, 58);
             this.googlesettings.TabIndex = 14;
-            this.googlesettings.Visible = googlebutton.Checked;
+            this.googlesettings.Visible = true;
             // 
             // panel8
             // 
@@ -346,27 +356,30 @@ namespace plagiarism
             this.filescount.TabIndex = 7;
             this.filescount.SelectedIndexChanged += new System.EventHandler(this.filescount_SelectedIndexChanged);
             // 
+            // googlebutton
+            // 
+            this.googlebutton.AutoSize = true;
+            this.googlebutton.Checked = true;
+            this.googlebutton.Location = new System.Drawing.Point(133, 7);
+            this.googlebutton.Name = "googlebutton";
+            this.googlebutton.Size = new System.Drawing.Size(73, 17);
+            this.googlebutton.TabIndex = 5;
+            this.googlebutton.TabStop = true;
+            this.googlebutton.Text = "Интернет";
+            this.googlebutton.UseVisualStyleBackColor = true;
+            this.googlebutton.CheckedChanged += new System.EventHandler(this.googlebutton_CheckedChanged);
+            // 
             // panel5
             // 
+            this.panel5.Controls.Add(this.testbutton);
             this.panel5.Controls.Add(this.collectionbutton);
             this.panel5.Controls.Add(this.googlebutton);
             this.panel5.Controls.Add(this.label4);
             this.panel5.Location = new System.Drawing.Point(2, 127);
             this.panel5.Margin = new System.Windows.Forms.Padding(0);
             this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(299, 31);
+            this.panel5.Size = new System.Drawing.Size(357, 31);
             this.panel5.TabIndex = 12;
-            // 
-            // collectionbutton
-            // 
-            this.collectionbutton.AutoSize = true;
-            this.collectionbutton.Location = new System.Drawing.Point(212, 7);
-            this.collectionbutton.Name = "collectionbutton";
-            this.collectionbutton.Size = new System.Drawing.Size(80, 17);
-            this.collectionbutton.TabIndex = 6;
-            this.collectionbutton.Text = "Коллекция";
-            this.collectionbutton.UseVisualStyleBackColor = true;
-            this.collectionbutton.CheckedChanged += new System.EventHandler(this.collectionbutton_CheckedChanged);
             // 
             // label4
             // 
@@ -827,6 +840,7 @@ namespace plagiarism
         }
 
         public RadioButton radioButton2;
+        private RadioButton testbutton;
     }
 }
 

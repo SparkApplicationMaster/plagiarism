@@ -254,7 +254,7 @@ namespace plagiarism
             Monitor.Exit(resultbox);
         }
 
-        private void Statistic()
+        private void Test()
         {
             for (char i = 'a'; i <= 'e'; i++)
             {
@@ -283,38 +283,8 @@ namespace plagiarism
                 }
                 while (compared < 19)
                 {
-                }
-//                 var sr_orig = new StreamReader("./programfiles/original.fail");
-//                 var sr_res = new StreamReader("./programfiles/results.fail");
-// 
-//                 var original = new Dictionary<string, string>();
-//                 var results = new Dictionary<string, string>();
-               
+                }      
             }
-//             var dirInfo = new DirectoryInfo("./programfiles");
-//             var enumeratefiles = dirInfo.EnumerateFiles("*." + _collectfilesformat);
-//             var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
-//             foreach (var fileinfo in fileInfos)
-//             {
-//                 var comparer = new BackgroundWorker();
-//                 comparer.DoWork += ComparerOnDoWork;
-//                 comparer.RunWorkerCompleted += (sender, args) =>
-//                     {
-//                         Monitor.Enter(results);
-//                         compared++;
-//                         if (!args.Result.Equals(""))
-//                         {
-//                             resultbox.Items.Insert(0, args.Result);
-//                         }
-//                         if (progressBar1.Value + (100 - 40)/fileInfos.Count() < 100)
-//                             progressBar1.Value += (100 - 40)/fileInfos.Count();
-//                         Monitor.Exit(results);
-//                     };
-//                 comparer.RunWorkerAsync(fileinfo.Name);
-//             }
-//             while (compared < fileInfos.Count())
-//             {
-//             }
             _sw = new StreamWriter("./programfiles/results.fail");
             foreach (var stat in resultbox.Items)
             {
@@ -395,7 +365,11 @@ namespace plagiarism
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-            if (googlebutton.Checked)
+            if (testbutton.Checked)
+            {
+                Test();
+            }
+            else
             {
                 backgroundWorker1.ReportProgress(0);
                 _fullText = ReadFile(openFileDialog1.FileName, true);
@@ -405,27 +379,66 @@ namespace plagiarism
                 backgroundWorker1.ReportProgress(12);
                 GoogleRequest();
                 GetReferences();
-                if (deletecheck.Checked)
+                if (googlebutton.Checked)
                 {
-                    var dirInfo = new DirectoryInfo("./programfiles");
-                    var enumeratePDFs = dirInfo.EnumerateFiles("*.pdf");
-                    foreach (var fileinfo in enumeratePDFs)
+                    if (deletecheck.Checked)
                     {
-                        try
+                        var dirInfo = new DirectoryInfo("./programfiles");
+                        var enumeratePDFs = dirInfo.EnumerateFiles("*.pdf");
+                        foreach (var fileinfo in enumeratePDFs)
                         {
-                            fileinfo.Delete();
-                        }
-                        catch(IOException)
-                        {
+                            try
+                            {
+                                fileinfo.Delete();
+                            }
+                            catch (IOException)
+                            {
+                            }
                         }
                     }
+                    DownloadFiles(_filesneeded);
                 }
-                DownloadFiles(_filesneeded);
+                else
+                {
+                    StatisticCollect();
+                }
             }
-            else
+        }
+
+        private void StatisticCollect()
+        {
+            var compared = 0;
+            var dirInfo = new DirectoryInfo("./programfiles");
+            var enumeratefiles = dirInfo.EnumerateFiles("*." + _collectfilesformat);
+            var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
+            foreach (var fileinfo in fileInfos)
             {
-                Statistic();
+                var comparer = new BackgroundWorker();
+                comparer.DoWork += ComparerOnDoWork;
+                comparer.RunWorkerCompleted += (sender, args) =>
+                {
+                    Monitor.Enter(results);
+                    compared++;
+                    if (!args.Result.Equals(""))
+                    {
+                        resultbox.Items.Insert(0, args.Result);
+                    }
+                    if (progressBar1.Value + (100 - 40)/fileInfos.Count() < 100)
+                        progressBar1.Value += (100 - 40)/fileInfos.Count();
+                         Monitor.Exit(results);
+                };
+                comparer.RunWorkerAsync(fileinfo.Name);
             }
+            while (compared < fileInfos.Count())
+            {
+            }
+            _sw = new StreamWriter("./programfiles/results.fail");
+            foreach (var stat in resultbox.Items)
+            {
+                _sw.WriteLine(stat);
+            }
+            _sw.Close();
+            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
         private void progressBar1_Click(object sender, EventArgs e)
@@ -492,6 +505,11 @@ namespace plagiarism
         }
 
         private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            Shingles.Checkinputfile = false;
+        }
+
+        private void testbutton_CheckedChanged(object sender, EventArgs e)
         {
             Shingles.Checkinputfile = false;
         }
