@@ -53,7 +53,6 @@ namespace plagiarism
             this.filesformat = new System.Windows.Forms.ComboBox();
             this.collectionbutton = new System.Windows.Forms.RadioButton();
             this.panel11 = new System.Windows.Forms.Panel();
-            this.testbutton = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.label7 = new System.Windows.Forms.Label();
@@ -64,13 +63,12 @@ namespace plagiarism
             this.panel7 = new System.Windows.Forms.Panel();
             this.filecount = new System.Windows.Forms.Label();
             this.filescount = new System.Windows.Forms.ComboBox();
-            this.googlebutton = new System.Windows.Forms.RadioButton();
             this.panel5 = new System.Windows.Forms.Panel();
+            this.testbutton = new System.Windows.Forms.RadioButton();
+            this.googlebutton = new System.Windows.Forms.RadioButton();
             this.label4 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.nocompbutton = new System.Windows.Forms.RadioButton();
             this.shinglebutton = new System.Windows.Forms.RadioButton();
-            this.kernelbutton = new System.Windows.Forms.RadioButton();
             this.label3 = new System.Windows.Forms.Label();
             this.panel6 = new System.Windows.Forms.Panel();
             this.filenamelabel = new System.Windows.Forms.Label();
@@ -232,17 +230,6 @@ namespace plagiarism
             this.panel11.Size = new System.Drawing.Size(292, 31);
             this.panel11.TabIndex = 15;
             // 
-            // testbutton
-            // 
-            this.testbutton.AutoSize = true;
-            this.testbutton.Location = new System.Drawing.Point(298, 7);
-            this.testbutton.Name = "testbutton";
-            this.testbutton.Size = new System.Drawing.Size(53, 17);
-            this.testbutton.TabIndex = 9;
-            this.testbutton.Text = "TECT";
-            this.testbutton.UseVisualStyleBackColor = true;
-            this.testbutton.CheckedChanged += new System.EventHandler(this.testbutton_CheckedChanged);
-            // 
             // radioButton2
             // 
             this.radioButton2.AutoSize = true;
@@ -285,7 +272,6 @@ namespace plagiarism
             this.googlesettings.Name = "googlesettings";
             this.googlesettings.Size = new System.Drawing.Size(248, 58);
             this.googlesettings.TabIndex = 14;
-            this.googlesettings.Visible = true;
             // 
             // panel8
             // 
@@ -356,6 +342,29 @@ namespace plagiarism
             this.filescount.TabIndex = 7;
             this.filescount.SelectedIndexChanged += new System.EventHandler(this.filescount_SelectedIndexChanged);
             // 
+            // panel5
+            // 
+            this.panel5.Controls.Add(this.testbutton);
+            this.panel5.Controls.Add(this.collectionbutton);
+            this.panel5.Controls.Add(this.googlebutton);
+            this.panel5.Controls.Add(this.label4);
+            this.panel5.Location = new System.Drawing.Point(2, 127);
+            this.panel5.Margin = new System.Windows.Forms.Padding(0);
+            this.panel5.Name = "panel5";
+            this.panel5.Size = new System.Drawing.Size(357, 31);
+            this.panel5.TabIndex = 12;
+            // 
+            // testbutton
+            // 
+            this.testbutton.AutoSize = true;
+            this.testbutton.Location = new System.Drawing.Point(298, 7);
+            this.testbutton.Name = "testbutton";
+            this.testbutton.Size = new System.Drawing.Size(53, 17);
+            this.testbutton.TabIndex = 9;
+            this.testbutton.Text = "TECT";
+            this.testbutton.UseVisualStyleBackColor = true;
+            this.testbutton.CheckedChanged += new System.EventHandler(this.testbutton_CheckedChanged);
+            // 
             // googlebutton
             // 
             this.googlebutton.AutoSize = true;
@@ -369,18 +378,6 @@ namespace plagiarism
             this.googlebutton.UseVisualStyleBackColor = true;
             this.googlebutton.CheckedChanged += new System.EventHandler(this.googlebutton_CheckedChanged);
             // 
-            // panel5
-            // 
-            this.panel5.Controls.Add(this.testbutton);
-            this.panel5.Controls.Add(this.collectionbutton);
-            this.panel5.Controls.Add(this.googlebutton);
-            this.panel5.Controls.Add(this.label4);
-            this.panel5.Location = new System.Drawing.Point(2, 127);
-            this.panel5.Margin = new System.Windows.Forms.Padding(0);
-            this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(357, 31);
-            this.panel5.TabIndex = 12;
-            // 
             // label4
             // 
             this.label4.AutoSize = true;
@@ -392,26 +389,13 @@ namespace plagiarism
             // 
             // panel4
             // 
-            this.panel4.Controls.Add(this.nocompbutton);
             this.panel4.Controls.Add(this.shinglebutton);
-            this.panel4.Controls.Add(this.kernelbutton);
             this.panel4.Controls.Add(this.label3);
             this.panel4.Location = new System.Drawing.Point(2, 96);
             this.panel4.Margin = new System.Windows.Forms.Padding(0);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(340, 31);
+            this.panel4.Size = new System.Drawing.Size(169, 31);
             this.panel4.TabIndex = 11;
-            // 
-            // nocompbutton
-            // 
-            this.nocompbutton.AutoSize = true;
-            this.nocompbutton.Location = new System.Drawing.Point(240, 7);
-            this.nocompbutton.Name = "nocompbutton";
-            this.nocompbutton.Size = new System.Drawing.Size(93, 17);
-            this.nocompbutton.TabIndex = 7;
-            this.nocompbutton.Text = "не проверять";
-            this.nocompbutton.UseVisualStyleBackColor = true;
-            this.nocompbutton.CheckedChanged += new System.EventHandler(this.nocompbutton_CheckedChanged);
             // 
             // shinglebutton
             // 
@@ -425,17 +409,6 @@ namespace plagiarism
             this.shinglebutton.Text = "Шинглы";
             this.shinglebutton.UseVisualStyleBackColor = true;
             this.shinglebutton.CheckedChanged += new System.EventHandler(this.shinglebutton_CheckedChanged);
-            // 
-            // kernelbutton
-            // 
-            this.kernelbutton.AutoSize = true;
-            this.kernelbutton.Location = new System.Drawing.Point(172, 7);
-            this.kernelbutton.Name = "kernelbutton";
-            this.kernelbutton.Size = new System.Drawing.Size(62, 17);
-            this.kernelbutton.TabIndex = 5;
-            this.kernelbutton.Text = "Кернел";
-            this.kernelbutton.UseVisualStyleBackColor = true;
-            this.kernelbutton.CheckedChanged += new System.EventHandler(this.kernelbutton_CheckedChanged);
             // 
             // label3
             // 
@@ -675,9 +648,7 @@ namespace plagiarism
         private Microsoft.VisualBasic.PowerPacks.LineShape lineShape1;
         private System.Windows.Forms.Panel panel4;
         private System.Windows.Forms.RadioButton shinglebutton;
-        private System.Windows.Forms.RadioButton kernelbutton;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.RadioButton nocompbutton;
         private System.Windows.Forms.Panel panel5;
         private System.Windows.Forms.RadioButton collectionbutton;
         private System.Windows.Forms.RadioButton googlebutton;
@@ -708,137 +679,6 @@ namespace plagiarism
         private System.Windows.Forms.Panel panel12;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ComboBox filesformat;
-
-        private static string ReadFile(string path, bool inputfile)
-        {
-            string resultstr;
-            switch (path.Substring(path.Length - 3))
-            {
-                case "pdf":
-                    var stripper = new PDFTextStripper();
-                    var doc = PDDocument.load(path);
-                    
-                    if (inputfile)
-                    {
-                        var sw = new StreamWriter("./programfiles/suspicious.fail");
-                        sw.WriteLine(resultstr = stripper.getText(doc).ToLower());
-                        sw.Close();
-                    }
-                    else
-                    {
-                        resultstr = stripper.getText(doc).ToLower();
-                    }
-                    doc.close();
-                    break;
-                case "txt":
-                    var sr = new StreamReader(path);
-                    resultstr = sr.ReadToEnd().ToLower();
-                    sr.Close();
-                    break;
-                default:
-                    MessageBox.Show(@"Файл должен быть в формате 'pdf' или 'txt'");
-                    return "";
-            }
-            return resultstr;
-        }
-
-        private void GetKeywords()
-        {
-            var count = _dictWordCount.Count;
-            var keys = new List<string>(count);
-            var vals = new List<int>(count);
-            var trueVals = new List<int>(count);
-            foreach (var i in _dictWordCount)
-            {
-                keys.Add(i.Key);
-                vals.Add(i.Value);
-                trueVals.Add(i.Value);
-            }
-            count = _dictWordCount.Count;
-            for (var i = 1; i < count; i++)
-            {
-                if (_stemmer.Stem(keys[i]) != _stemmer.Stem(keys[i - 1])) continue;
-                if (keys[i].Length > keys[i - 1].Length || trueVals[i] < trueVals[i - 1])
-                {
-                    keys[i] = keys[i - 1];
-                    trueVals[i] = trueVals[i - 1];
-                }
-                vals[i] += vals[i - 1];
-                keys.RemoveAt(i - 1);
-                vals.RemoveAt(i - 1);
-                trueVals.RemoveAt(i - 1);
-                i--;
-                count--;
-            }
-            for (int i = 0; i < count; i++)
-            {
-                _keyWords.Add(vals[i], keys[i]);
-                if (i > 10)
-                {
-                    _keyWords.Remove(_keyWords.Last().Key, _keyWords.Last().Value.Last());
-                }
-            }
-            _sw = new StreamWriter("./programfiles/top_ten.fail");
-            foreach (var i in _keyWords)
-            {
-                _sw.WriteLine(i);
-            }
-            foreach (var i in _keyWords)
-            {
-                foreach (var j in i.Value)
-                {
-                    _sw.Write(j + " ");
-                }
-            }
-            _sw.Close();
-        }
-
-        private void GoogleRequest()
-        {
-            var reqstr = new string('\0', 0);
-            reqstr = _keyWords.SelectMany(i => i.Value).Aggregate(reqstr, (current, s) => 
-                                                                          current.Insert(current.Length, s + "+"));
-            _response = "";
-            for (var i = 0; i < 30; i += 10)
-            {
-                var request = WebRequest.Create("http://www.google.com/search?q=" 
-                                                + reqstr + "filetype:pdf" + "&start=" + i);
-                request.Method = "GET";
-                var response = request.GetResponse();
-                var dataStream = response.GetResponseStream();
-                if (dataStream == null) continue;
-                var reader = new StreamReader(dataStream, Encoding.UTF8);
-                _response += reader.ReadToEnd();
-                reader.Close();
-                dataStream.Close();
-                response.Close();
-            }
-            _sw = new StreamWriter("./programfiles/google_response.html");
-            _sw.WriteLine(_response);
-            _sw.Close();
-        }
-
-        private void GetReferences()
-        {
-            _sw = new StreamWriter("./programfiles/refs.fail",false, Encoding.UTF8);
-            _index = 0;
-            for (var i = 0; i < _response.Length - 6; i++)
-            {
-                if (_response.Substring(i, 6) != "url?q=") continue;
-                int j;
-                for (j = i + 6; j < _response.Length && _response[j] != '&'; j++)
-                {
-                }
-                if (_response.Substring(j - 3, 3) != "pdf") continue;
-                Refs[_index] = _response.Substring(i + 6, j - i - 6);
-                Refs[_index] = HttpUtility.UrlDecode(Refs[_index]);
-                _sw.WriteLine(Refs[_index]);
-                _index++;
-                i = j;
-            }
-            _sw.Close();
-        }
-
         public RadioButton radioButton2;
         private RadioButton testbutton;
     }

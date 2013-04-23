@@ -6,10 +6,13 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Web;
 using System.Windows.Forms;
 using Iveonik.Stemmers;
 using Wintellect.PowerCollections;
 using dataAnalyze.Algorithms;
+using org.apache.pdfbox.pdmodel;
+using org.apache.pdfbox.util;
 using Timer = System.Windows.Forms.Timer;
 
 namespace plagiarism
@@ -46,18 +49,37 @@ namespace plagiarism
             filescount.SelectedItem = "10";
         }
 
-        private void BackgroundOnRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
+        private static string ReadFile(string path, bool inputfile)
         {
-            Monitor.Enter(resultbox);
-            resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
-            _checkedfiles++;
-            Monitor.Exit(resultbox);
-        }
+            string resultstr;
+            switch (path.Substring(path.Length - 3))
+            {
+                case "pdf":
+                    var stripper = new PDFTextStripper();
+                    var doc = PDDocument.load(path);
 
-        private void BackgroundOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
-        {
-            var filename = (string)doWorkEventArgs.Argument;
-            ShingleDetect(filename);
+                    if (inputfile)
+                    {
+                        var sw = new StreamWriter("./programfiles/suspicious.fail");
+                        sw.WriteLine(resultstr = stripper.getText(doc).ToLower());
+                        sw.Close();
+                    }
+                    else
+                    {
+                        resultstr = stripper.getText(doc).ToLower();
+                    }
+                    doc.close();
+                    break;
+                case "txt":
+                    var sr = new StreamReader(path);
+                    resultstr = sr.ReadToEnd().ToLower();
+                    sr.Close();
+                    break;
+                default:
+                    MessageBox.Show(@"Файл должен быть в формате 'pdf' или 'txt'");
+                    return "";
+            }
+            return resultstr;
         }
 
         private void GetDictionary()
@@ -113,6 +135,103 @@ namespace plagiarism
             _sw.Close();
         }
 
+        private void GetKeywords()
+        {
+            var count = _dictWordCount.Count;
+            var keys = new List<string>(count);
+            var vals = new List<int>(count);
+            var trueVals = new List<int>(count);
+            foreach (var i in _dictWordCount)
+            {
+                keys.Add(i.Key);
+                vals.Add(i.Value);
+                trueVals.Add(i.Value);
+            }
+            count = _dictWordCount.Count;
+            for (var i = 1; i < count; i++)
+            {
+                if (_stemmer.Stem(keys[i]) != _stemmer.Stem(keys[i - 1])) continue;
+                if (keys[i].Length > keys[i - 1].Length || trueVals[i] < trueVals[i - 1])
+                {
+                    keys[i] = keys[i - 1];
+                    trueVals[i] = trueVals[i - 1];
+                }
+                vals[i] += vals[i - 1];
+                keys.RemoveAt(i - 1);
+                vals.RemoveAt(i - 1);
+                trueVals.RemoveAt(i - 1);
+                i--;
+                count--;
+            }
+            for (int i = 0; i < count; i++)
+            {
+                _keyWords.Add(vals[i], keys[i]);
+                if (i > 10)
+                {
+                    _keyWords.Remove(_keyWords.Last().Key, _keyWords.Last().Value.Last());
+                }
+            }
+            _sw = new StreamWriter("./programfiles/top_ten.fail");
+            foreach (var i in _keyWords)
+            {
+                _sw.WriteLine(i);
+            }
+            foreach (var i in _keyWords)
+            {
+                foreach (var j in i.Value)
+                {
+                    _sw.Write(j + " ");
+                }
+            }
+            _sw.Close();
+        }
+
+        private void GoogleRequest()
+        {
+            var reqstr = new string('\0', 0);
+            reqstr = _keyWords.SelectMany(i => i.Value).Aggregate(reqstr, (current, s) =>
+                                                                          current.Insert(current.Length, s + "+"));
+            _response = "";
+            for (var i = 0; i < 30; i += 10)
+            {
+                var request = WebRequest.Create("http://www.google.com/search?q="
+                                                + reqstr + "filetype:pdf" + "&start=" + i);
+                request.Method = "GET";
+                var response = request.GetResponse();
+                var dataStream = response.GetResponseStream();
+                if (dataStream == null) continue;
+                var reader = new StreamReader(dataStream, Encoding.UTF8);
+                _response += reader.ReadToEnd();
+                reader.Close();
+                dataStream.Close();
+                response.Close();
+            }
+            _sw = new StreamWriter("./programfiles/google_response.html");
+            _sw.WriteLine(_response);
+            _sw.Close();
+        }
+
+        private void GetReferences()
+        {
+            _sw = new StreamWriter("./programfiles/refs.fail", false, Encoding.UTF8);
+            _index = 0;
+            for (var i = 0; i < _response.Length - 6; i++)
+            {
+                if (_response.Substring(i, 6) != "url?q=") continue;
+                int j;
+                for (j = i + 6; j < _response.Length && _response[j] != '&'; j++)
+                {
+                }
+                if (_response.Substring(j - 3, 3) != "pdf") continue;
+                Refs[_index] = _response.Substring(i + 6, j - i - 6);
+                Refs[_index] = HttpUtility.UrlDecode(Refs[_index]);
+                _sw.WriteLine(Refs[_index]);
+                _index++;
+                i = j;
+            }
+            _sw.Close();
+        }
+
         private void DownloadFiles(int x = 0)
         {
             var foundFilesCount = x > _index ? _index : x;
@@ -146,44 +265,6 @@ namespace plagiarism
             }
             _sw.Close();
             resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
-        }
-
-        private void BackloaderOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
-        {
-            var reference = (string) doWorkEventArgs.Argument;
-            var filename = reference.Substring(reference.LastIndexOf('/') + 1);
-            var client = new WebClient();
-            try
-            {
-                var request = (HttpWebRequest) WebRequest.Create(new Uri(reference));
-                var response = (HttpWebResponse) request.GetResponse();
-                response.Close();
-                var filesize = (int) response.ContentLength/1024;
-                if (filesize > 1 && filesize <= 10*1024)
-                {
-                    client.DownloadFile(reference, "./programfiles/" + filename);
-                }
-                if (shinglebutton.Checked)
-                {
-                    doWorkEventArgs.Result += ShingleDetect(filename);
-                }
-                else if (kernelbutton.Checked)
-                {
-                    doWorkEventArgs.Result = "Проверка не проводилась";
-                }
-                else
-                {
-                    doWorkEventArgs.Result = "Проверка не проводилась";
-                }
-            }
-            catch (WebException)
-            {
-                doWorkEventArgs.Result = "Файл " + filename + " не скачался";
-            }
-            catch (Exception)
-            {
-                doWorkEventArgs.Result = "Проверка " + filename + " не удалась";
-            }
         }
 
         private string ShingleDetect(string filename)
@@ -241,17 +322,40 @@ namespace plagiarism
             return result;
         }
 
-        private void BackloaderOnRunWorkerCompleted(object sender,
-            RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
+        private void StatisticCollect()
         {
-            Monitor.Enter(resultbox);
-            resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
-            if (progressBar1.Value + (100 - 12)/_needed <= 100)
+            var compared = 0;
+            var dirInfo = new DirectoryInfo("./programfiles");
+            var enumeratefiles = dirInfo.EnumerateFiles("*." + _collectfilesformat);
+            var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
+            foreach (var fileinfo in fileInfos)
             {
-                progressBar1.Value += (100 - 12)/_needed;
+                var comparer = new BackgroundWorker();
+                comparer.DoWork += ComparerOnDoWork;
+                comparer.RunWorkerCompleted += (sender, args) =>
+                {
+                    Monitor.Enter(results);
+                    compared++;
+                    if (!args.Result.Equals(""))
+                    {
+                        resultbox.Items.Insert(0, args.Result);
+                    }
+                    if (progressBar1.Value + (100 - 40) / fileInfos.Count() < 100)
+                        progressBar1.Value += (100 - 40) / fileInfos.Count();
+                    Monitor.Exit(results);
+                };
+                comparer.RunWorkerAsync(fileinfo.Name);
             }
-            _checkedfiles++;
-            Monitor.Exit(resultbox);
+            while (compared < fileInfos.Count())
+            {
+            }
+            _sw = new StreamWriter("./programfiles/results.fail");
+            foreach (var stat in resultbox.Items)
+            {
+                _sw.WriteLine(stat);
+            }
+            _sw.Close();
+            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
         private void Test()
@@ -266,7 +370,7 @@ namespace plagiarism
                 foreach (var fileInfo in enumeratefiles)
                 {
                     var comparer = new BackgroundWorker();
-                    comparer.DoWork += ComparerOnDoWork1;
+                    comparer.DoWork += ComparerOnDoWork;
                     comparer.RunWorkerCompleted += (sender, args) =>
                     {
                         Monitor.Enter(results);
@@ -283,7 +387,7 @@ namespace plagiarism
                 }
                 while (compared < 19)
                 {
-                }      
+                }
             }
             _sw = new StreamWriter("./programfiles/results.fail");
             foreach (var stat in resultbox.Items)
@@ -294,9 +398,52 @@ namespace plagiarism
             resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
-        private void ComparerOnDoWork1(object sender, DoWorkEventArgs e)
+        private void BackloaderOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
         {
-            e.Result = ShingleDetect((string)e.Argument);
+            var reference = (string) doWorkEventArgs.Argument;
+            var filename = reference.Substring(reference.LastIndexOf('/') + 1);
+            var client = new WebClient();
+            try
+            {
+                var request = (HttpWebRequest) WebRequest.Create(new Uri(reference));
+                var response = (HttpWebResponse) request.GetResponse();
+                response.Close();
+                var filesize = (int) response.ContentLength/1024;
+                if (filesize > 1 && filesize <= 10*1024)
+                {
+                    client.DownloadFile(reference, "./programfiles/" + filename);
+                }
+                else
+                {
+                    doWorkEventArgs.Result += "Ненужный файл " + filename + " пропущен";
+                    return;
+                }
+                if (shinglebutton.Checked)
+                {
+                    doWorkEventArgs.Result += ShingleDetect(filename);
+                }
+            }
+            catch (WebException)
+            {
+                doWorkEventArgs.Result = "Файл " + filename + " не скачался";
+            }
+            catch (Exception)
+            {
+                doWorkEventArgs.Result = "Проверка " + filename + " не удалась";
+            }
+        }
+
+        private void BackloaderOnRunWorkerCompleted(object sender,
+            RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
+        {
+            Monitor.Enter(resultbox);
+            resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
+            if (progressBar1.Value + (100 - 12)/_needed <= 100)
+            {
+                progressBar1.Value += (100 - 12)/_needed;
+            }
+            _checkedfiles++;
+            Monitor.Exit(resultbox);
         }
 
         private void ComparerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
@@ -322,45 +469,6 @@ namespace plagiarism
             _timer.Start();
             panel3.Visible = true;
             backgroundWorker1.RunWorkerAsync();
-        }
-
-        private void OnChanged(object o, ProgressChangedEventArgs args)
-        {
-            progressBar1.Value = args.ProgressPercentage;
-            switch (args.ProgressPercentage)
-            {
-                case 0:
-                    cur_op.Text = @"Чтение файла";
-                    break;
-                case 10:
-                    cur_op.Text = @"Получение ключевых слов";
-                    break;
-                case 11:
-                    cur_op.Text = @"Запрос в Google";
-                    break;
-                default:
-                    if (args.ProgressPercentage >= 12)
-                    {
-                        cur_op.Text = @"Подсчёт статистики";
-                    }
-                    break;
-            }
-        }
-
-        private void OnCompleted(object o, RunWorkerCompletedEventArgs args)
-        {
-            cur_op.Text = @"Завершено";
-            Monitor.Enter(progressBar1);
-            progressBar1.Value = 100;
-            Monitor.Exit(progressBar1);
-            _timer.Stop();
-        }
-
-        private void TimerOnTick(object sender, EventArgs eventArgs)
-        {
-            _time++;
-            timerlabel.ResetText();
-            timerlabel.Text += _time;
         }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -405,40 +513,43 @@ namespace plagiarism
             }
         }
 
-        private void StatisticCollect()
+        private void OnChanged(object o, ProgressChangedEventArgs args)
         {
-            var compared = 0;
-            var dirInfo = new DirectoryInfo("./programfiles");
-            var enumeratefiles = dirInfo.EnumerateFiles("*." + _collectfilesformat);
-            var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
-            foreach (var fileinfo in fileInfos)
+            progressBar1.Value = args.ProgressPercentage;
+            switch (args.ProgressPercentage)
             {
-                var comparer = new BackgroundWorker();
-                comparer.DoWork += ComparerOnDoWork;
-                comparer.RunWorkerCompleted += (sender, args) =>
-                {
-                    Monitor.Enter(results);
-                    compared++;
-                    if (!args.Result.Equals(""))
+                case 0:
+                    cur_op.Text = @"Чтение файла";
+                    break;
+                case 10:
+                    cur_op.Text = @"Получение ключевых слов";
+                    break;
+                case 11:
+                    cur_op.Text = @"Запрос в Google";
+                    break;
+                default:
+                    if (args.ProgressPercentage >= 12)
                     {
-                        resultbox.Items.Insert(0, args.Result);
+                        cur_op.Text = @"Подсчёт статистики";
                     }
-                    if (progressBar1.Value + (100 - 40)/fileInfos.Count() < 100)
-                        progressBar1.Value += (100 - 40)/fileInfos.Count();
-                         Monitor.Exit(results);
-                };
-                comparer.RunWorkerAsync(fileinfo.Name);
+                    break;
             }
-            while (compared < fileInfos.Count())
-            {
-            }
-            _sw = new StreamWriter("./programfiles/results.fail");
-            foreach (var stat in resultbox.Items)
-            {
-                _sw.WriteLine(stat);
-            }
-            _sw.Close();
-            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
+        }
+
+        private void OnCompleted(object o, RunWorkerCompletedEventArgs args)
+        {
+            cur_op.Text = @"Завершено";
+            Monitor.Enter(progressBar1);
+            progressBar1.Value = 100;
+            Monitor.Exit(progressBar1);
+            _timer.Stop();
+        }
+
+        private void TimerOnTick(object sender, EventArgs eventArgs)
+        {
+            _time++;
+            timerlabel.ResetText();
+            timerlabel.Text += _time;
         }
 
         private void progressBar1_Click(object sender, EventArgs e)
@@ -454,19 +565,6 @@ namespace plagiarism
             panel5.Visible = true;
             collectionsettings.Visible = collectionbutton.Checked;
             googlesettings.Visible = googlebutton.Checked;
-        }
-
-        private void kernelbutton_CheckedChanged(object sender, EventArgs e)
-        {
-            panel5.Visible = true;
-            collectionsettings.Visible = collectionbutton.Checked;
-            googlesettings.Visible = googlebutton.Checked;
-        }
-
-        private void nocompbutton_CheckedChanged(object sender, EventArgs e)
-        {
-            collectionsettings.Visible = false;
-            panel5.Visible = googlesettings.Visible = false;
         }
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
