@@ -22,8 +22,6 @@ namespace plagiarism
         private readonly OrderedMultiDictionary<int, string> _keyWords = new OrderedMultiDictionary<int, string>
             (true, (i, i1) => -i.CompareTo(i1), (s, s1) => String.Compare(s, s1, StringComparison.Ordinal));
 
-        private readonly Shingles _shingles = new Shingles(Delims, 10);
-
         private volatile int _checkedfiles;
         private string _collectfilesformat;
         private Dictionary<string, int> _dictWordCount;
@@ -39,16 +37,27 @@ namespace plagiarism
         private StreamWriter _sw;
         private double _time;
         private Timer _timer;
-        private HashSet<string> _subsequense; 
         private KeyValuePair<string, int>[] _sequense; 
 
         public Form1()
         {
             InitializeComponent();
-            shinglelength.SelectedItem = "10";
-            shinglelength.SelectedItem = "10";
             filesformat.SelectedItem = "txt";
-            filescount.SelectedItem = "5";
+            filescount.SelectedItem = "10";
+        }
+
+        private void BackgroundOnRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
+        {
+            Monitor.Enter(resultbox);
+            resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
+            _checkedfiles++;
+            Monitor.Exit(resultbox);
+        }
+
+        private void BackgroundOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
+        {
+            var filename = (string)doWorkEventArgs.Argument;
+            ShingleDetect(filename);
         }
 
         private void GetDictionary()
@@ -179,43 +188,56 @@ namespace plagiarism
 
         private string ShingleDetect(string filename)
         {
-            const string somecopy = "Немного было скопировано из ";
-            const string copypaste = "Весь текст был скопирован из ";
-            const string nocopy = "Ничего не копировалось из ";
-            const string alotcopy = "Много копипаста из ";
+            const string heavy = "heavy: ";
+            const string cut = "cut: ";
+            const string non = "non: ";
+            const string light = "light: ";
             var result = "";
+            var shingles = new Shingles(Delims, 1);
             string compText;
             try
             {
                 compText = ReadFile("./programfiles/" + filename, false);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return filename + " fail";
+                return filename + " fail " + e.Message;
             }
             Monitor.Enter(_fullText);
             var fulltext = _fullText;
             Monitor.Exit(_fullText);
-            result += filename + " ";
-            var similarity = (int) _shingles.CompareStrings(fulltext, compText);
-            result += (similarity + "% совпадения");
-            if (similarity < 5)
+            var similarity = new int[4];
+            result += filename + " - ";
+            similarity[0] = (int)shingles.CompareStrings(fulltext, compText, 1);
+            if (similarity[0] < 50)
             {
-                result += (nocopy);
+                result += non + (similarity[0] + "% совпадения на " + 1 + " этапе");
+                return result;
             }
-            else if (similarity < 40)
+            similarity[1] = (int)shingles.CompareStrings(fulltext, compText, 5);
+            if (similarity[1] < 29)
             {
-                result += (somecopy);
+                result += non + (similarity[1] + "% совпадения на " + 2 + " этапе");
+                return result;
             }
-            else if (similarity < 70)
+            if (similarity[1] < 45)
             {
-                result += (alotcopy);
+                result += heavy + (similarity[1] + "% совпадения на " + 2 + " этапе");
+                return result;
             }
-            else
+
+            similarity[2] = (int)shingles.CompareStrings(fulltext, compText, 7);
+            if (similarity[2] < 60)
             {
-                result += (copypaste);
+                result += heavy + (similarity[2] + "% совпадения на " + 3 + " этапе");
+                return result;
             }
-            /*result += filename;*/
+            if (similarity[2] < 85)
+            {
+                result += light + (similarity[2] + "% совпадения на " + 3 + " этапе");
+                return result;
+            }
+            result += cut + (similarity[2] + "% совпадения на " + 3 + " этапе");
             return result;
         }
 
@@ -234,15 +256,18 @@ namespace plagiarism
 
         private void Statistic()
         {
-            var compared = 0;
-            var dirInfo = new DirectoryInfo("./programfiles");
-            var enumeratefiles = dirInfo.EnumerateFiles("*." + _collectfilesformat);
-            var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
-            foreach (var fileinfo in fileInfos)
+            for (char i = 'a'; i <= 'e'; i++)
             {
-                var comparer = new BackgroundWorker();
-                comparer.DoWork += ComparerOnDoWork;
-                comparer.RunWorkerCompleted += (sender, args) =>
+                var compared = 0;
+                _fullText = ReadFile("./userfiles/orig_task" + i + ".txt", true);
+                var dirInfo = new DirectoryInfo("./programfiles");
+                var enumeratefiles = dirInfo.EnumerateFiles("*" + i + ".txt");
+                var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
+                foreach (var fileInfo in enumeratefiles)
+                {
+                    var comparer = new BackgroundWorker();
+                    comparer.DoWork += ComparerOnDoWork1;
+                    comparer.RunWorkerCompleted += (sender, args) =>
                     {
                         Monitor.Enter(results);
                         compared++;
@@ -250,15 +275,46 @@ namespace plagiarism
                         {
                             resultbox.Items.Insert(0, args.Result);
                         }
-                        if (progressBar1.Value + (100 - 40)/fileInfos.Count() < 100)
-                            progressBar1.Value += (100 - 40)/fileInfos.Count();
+                        if (progressBar1.Value + (100 - 40) / fileInfos.Count() < 100)
+                            progressBar1.Value += (100 - 40) / fileInfos.Count();
                         Monitor.Exit(results);
                     };
-                comparer.RunWorkerAsync(fileinfo.Name);
+                    comparer.RunWorkerAsync(fileInfo.Name);
+                }
+                while (compared < 19)
+                {
+                }
+//                 var sr_orig = new StreamReader("./programfiles/original.fail");
+//                 var sr_res = new StreamReader("./programfiles/results.fail");
+// 
+//                 var original = new Dictionary<string, string>();
+//                 var results = new Dictionary<string, string>();
+               
             }
-            while (compared < fileInfos.Count())
-            {
-            }
+//             var dirInfo = new DirectoryInfo("./programfiles");
+//             var enumeratefiles = dirInfo.EnumerateFiles("*." + _collectfilesformat);
+//             var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
+//             foreach (var fileinfo in fileInfos)
+//             {
+//                 var comparer = new BackgroundWorker();
+//                 comparer.DoWork += ComparerOnDoWork;
+//                 comparer.RunWorkerCompleted += (sender, args) =>
+//                     {
+//                         Monitor.Enter(results);
+//                         compared++;
+//                         if (!args.Result.Equals(""))
+//                         {
+//                             resultbox.Items.Insert(0, args.Result);
+//                         }
+//                         if (progressBar1.Value + (100 - 40)/fileInfos.Count() < 100)
+//                             progressBar1.Value += (100 - 40)/fileInfos.Count();
+//                         Monitor.Exit(results);
+//                     };
+//                 comparer.RunWorkerAsync(fileinfo.Name);
+//             }
+//             while (compared < fileInfos.Count())
+//             {
+//             }
             _sw = new StreamWriter("./programfiles/results.fail");
             foreach (var stat in resultbox.Items)
             {
@@ -268,13 +324,10 @@ namespace plagiarism
             resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
-//         private void Subsequense(KeyValuePair<string, int> [] sequense, int n, int pos)
-//         {
-//             for (int i = pos; i < sequense.Length - n; i++)
-//             {
-//                 
-//             }
-//         }
+        private void ComparerOnDoWork1(object sender, DoWorkEventArgs e)
+        {
+            e.Result = ShingleDetect((string)e.Argument);
+        }
 
         private void ComparerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
         {
@@ -342,14 +395,14 @@ namespace plagiarism
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-            backgroundWorker1.ReportProgress(0);
-            _fullText = ReadFile(openFileDialog1.FileName, true);
-            backgroundWorker1.ReportProgress(10);
-            GetDictionary();
-            GetKeywords();
-            backgroundWorker1.ReportProgress(12);
             if (googlebutton.Checked)
             {
+                backgroundWorker1.ReportProgress(0);
+                _fullText = ReadFile(openFileDialog1.FileName, true);
+                backgroundWorker1.ReportProgress(10);
+                GetDictionary();
+                GetKeywords();
+                backgroundWorker1.ReportProgress(12);
                 GoogleRequest();
                 GetReferences();
                 if (deletecheck.Checked)
@@ -362,7 +415,7 @@ namespace plagiarism
                         {
                             fileinfo.Delete();
                         }
-                        catch
+                        catch(IOException)
                         {
                         }
                     }
@@ -386,24 +439,21 @@ namespace plagiarism
         private void shinglebutton_CheckedChanged(object sender, EventArgs e)
         {
             panel5.Visible = true;
-            panellength.Visible = true;
             collectionsettings.Visible = collectionbutton.Checked;
-            deletecollect.Visible = googlebutton.Checked;
+            googlesettings.Visible = googlebutton.Checked;
         }
 
         private void kernelbutton_CheckedChanged(object sender, EventArgs e)
         {
             panel5.Visible = true;
-            panellength.Visible = false;
             collectionsettings.Visible = collectionbutton.Checked;
-            deletecollect.Visible = googlebutton.Checked;
+            googlesettings.Visible = googlebutton.Checked;
         }
 
         private void nocompbutton_CheckedChanged(object sender, EventArgs e)
         {
-            panellength.Visible = false;
             collectionsettings.Visible = false;
-            panel5.Visible = deletecollect.Visible = false;
+            panel5.Visible = googlesettings.Visible = false;
         }
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
@@ -417,23 +467,18 @@ namespace plagiarism
         private void googlebutton_CheckedChanged(object sender, EventArgs e)
         {
             collectionsettings.Visible = false;
-            deletecollect.Visible = true;
+            googlesettings.Visible = true;
         }
 
         private void collectionbutton_CheckedChanged(object sender, EventArgs e)
         {
             collectionsettings.Visible = true;
-            deletecollect.Visible = false;
+            googlesettings.Visible = false;
         }
 
         private void filescount_SelectedIndexChanged(object sender, EventArgs e)
         {
             _filesneeded = Convert.ToInt32(filescount.SelectedItem);
-        }
-
-        private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _shingles.Length(Convert.ToInt32(shinglelength.SelectedItem));
         }
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)

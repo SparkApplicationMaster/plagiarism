@@ -48,17 +48,14 @@ namespace plagiarism
             this.label1 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.collectionsettings = new System.Windows.Forms.Panel();
-            this.panellength = new System.Windows.Forms.Panel();
-            this.label9 = new System.Windows.Forms.Label();
-            this.shinglelength = new System.Windows.Forms.ComboBox();
+            this.panel12 = new System.Windows.Forms.Panel();
+            this.label8 = new System.Windows.Forms.Label();
+            this.filesformat = new System.Windows.Forms.ComboBox();
             this.panel11 = new System.Windows.Forms.Panel();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.label7 = new System.Windows.Forms.Label();
-            this.panel12 = new System.Windows.Forms.Panel();
-            this.label8 = new System.Windows.Forms.Label();
-            this.filesformat = new System.Windows.Forms.ComboBox();
-            this.deletecollect = new System.Windows.Forms.Panel();
+            this.googlesettings = new System.Windows.Forms.Panel();
             this.panel8 = new System.Windows.Forms.Panel();
             this.label5 = new System.Windows.Forms.Label();
             this.deletecheck = new System.Windows.Forms.CheckBox();
@@ -95,10 +92,9 @@ namespace plagiarism
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.collectionsettings.SuspendLayout();
-            this.panellength.SuspendLayout();
-            this.panel11.SuspendLayout();
             this.panel12.SuspendLayout();
-            this.deletecollect.SuspendLayout();
+            this.panel11.SuspendLayout();
+            this.googlesettings.SuspendLayout();
             this.panel8.SuspendLayout();
             this.panel7.SuspendLayout();
             this.panel5.SuspendLayout();
@@ -155,9 +151,9 @@ namespace plagiarism
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.panellength);
             this.panel2.Controls.Add(this.collectionsettings);
-            this.panel2.Controls.Add(this.deletecollect);
+            this.panel2.Controls.Add(this.panel11);
+            this.panel2.Controls.Add(this.googlesettings);
             this.panel2.Controls.Add(this.panel1);
             this.panel2.Controls.Add(this.panel5);
             this.panel2.Controls.Add(this.panel4);
@@ -173,56 +169,52 @@ namespace plagiarism
             // 
             // collectionsettings
             // 
-            this.collectionsettings.Controls.Add(this.panel11);
             this.collectionsettings.Controls.Add(this.panel12);
-            this.collectionsettings.Location = new System.Drawing.Point(2, 158);
+            this.collectionsettings.Location = new System.Drawing.Point(1, 189);
             this.collectionsettings.Margin = new System.Windows.Forms.Padding(0);
             this.collectionsettings.Name = "collectionsettings";
-            this.collectionsettings.Size = new System.Drawing.Size(293, 58);
+            this.collectionsettings.Size = new System.Drawing.Size(293, 41);
             this.collectionsettings.TabIndex = 15;
+            this.collectionsettings.Visible = collectionbutton.Checked;
             // 
-            // panellength
+            // panel12
             // 
-            this.panellength.Controls.Add(this.label9);
-            this.panellength.Controls.Add(this.shinglelength);
-            this.panellength.Location = new System.Drawing.Point(3, 216);
-            this.panellength.Margin = new System.Windows.Forms.Padding(0);
-            this.panellength.Name = "panellength";
-            this.panellength.Size = new System.Drawing.Size(168, 27);
-            this.panellength.TabIndex = 20;
+            this.panel12.Controls.Add(this.label8);
+            this.panel12.Controls.Add(this.filesformat);
+            this.panel12.Location = new System.Drawing.Point(0, 0);
+            this.panel12.Margin = new System.Windows.Forms.Padding(0);
+            this.panel12.Name = "panel12";
+            this.panel12.Size = new System.Drawing.Size(228, 27);
+            this.panel12.TabIndex = 15;
             // 
-            // label9
+            // label8
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(3, 6);
-            this.label9.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(83, 13);
-            this.label9.TabIndex = 8;
-            this.label9.Text = "Длина шингла:";
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(1, 6);
+            this.label8.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(159, 13);
+            this.label8.TabIndex = 6;
+            this.label8.Text = "Формат файлов в коллекции:";
             // 
-            // shinglelength
+            // filesformat
             // 
-            this.shinglelength.FormattingEnabled = true;
-            this.shinglelength.Items.AddRange(new object[] {
-            "1",
-            "2",
-            "3",
-            "5",
-            "10",
-            "15"});
-            this.shinglelength.Location = new System.Drawing.Point(119, 3);
-            this.shinglelength.Name = "shinglelength";
-            this.shinglelength.Size = new System.Drawing.Size(35, 21);
-            this.shinglelength.TabIndex = 9;
-            this.shinglelength.SelectedIndexChanged += new System.EventHandler(this.comboBox3_SelectedIndexChanged);
+            this.filesformat.FormattingEnabled = true;
+            this.filesformat.Items.AddRange(new object[] {
+            "pdf",
+            "txt"});
+            this.filesformat.Location = new System.Drawing.Point(169, 3);
+            this.filesformat.Name = "filesformat";
+            this.filesformat.Size = new System.Drawing.Size(39, 21);
+            this.filesformat.TabIndex = 7;
+            this.filesformat.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
             // 
             // panel11
             // 
             this.panel11.Controls.Add(this.radioButton2);
             this.panel11.Controls.Add(this.radioButton1);
             this.panel11.Controls.Add(this.label7);
-            this.panel11.Location = new System.Drawing.Point(0, 0);
+            this.panel11.Location = new System.Drawing.Point(3, 158);
             this.panel11.Margin = new System.Windows.Forms.Padding(0);
             this.panel11.Name = "panel11";
             this.panel11.Size = new System.Drawing.Size(288, 31);
@@ -261,48 +253,29 @@ namespace plagiarism
             this.label7.TabIndex = 4;
             this.label7.Text = "Что проверяется:";
             // 
-            // panel12
+            // googlebutton
             // 
-            this.panel12.Controls.Add(this.label8);
-            this.panel12.Controls.Add(this.filesformat);
-            this.panel12.Location = new System.Drawing.Point(0, 31);
-            this.panel12.Margin = new System.Windows.Forms.Padding(0);
-            this.panel12.Name = "panel12";
-            this.panel12.Size = new System.Drawing.Size(228, 27);
-            this.panel12.TabIndex = 15;
+            this.googlebutton.AutoSize = true;
+            this.googlebutton.Checked = true;
+            this.googlebutton.Location = new System.Drawing.Point(133, 7);
+            this.googlebutton.Name = "googlebutton";
+            this.googlebutton.Size = new System.Drawing.Size(73, 17);
+            this.googlebutton.TabIndex = 5;
+            this.googlebutton.TabStop = true;
+            this.googlebutton.Text = "Интернет";
+            this.googlebutton.UseVisualStyleBackColor = true;
+            this.googlebutton.CheckedChanged += new System.EventHandler(this.googlebutton_CheckedChanged);
             // 
-            // label8
+            // googlesettings
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(1, 6);
-            this.label8.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(159, 13);
-            this.label8.TabIndex = 6;
-            this.label8.Text = "Формат файлов в коллекции:";
-            // 
-            // filesformat
-            // 
-            this.filesformat.FormattingEnabled = true;
-            this.filesformat.Items.AddRange(new object[] {
-            "pdf",
-            "txt"});
-            this.filesformat.Location = new System.Drawing.Point(169, 3);
-            this.filesformat.Name = "filesformat";
-            this.filesformat.Size = new System.Drawing.Size(39, 21);
-            this.filesformat.TabIndex = 7;
-            this.filesformat.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
-            // 
-            // deletecollect
-            // 
-            this.deletecollect.Controls.Add(this.panel8);
-            this.deletecollect.Controls.Add(this.panel7);
-            this.deletecollect.Location = new System.Drawing.Point(3, 158);
-            this.deletecollect.Margin = new System.Windows.Forms.Padding(0);
-            this.deletecollect.Name = "deletecollect";
-            this.deletecollect.Size = new System.Drawing.Size(248, 58);
-            this.deletecollect.TabIndex = 14;
-            this.deletecollect.Visible = false;
+            this.googlesettings.Controls.Add(this.panel8);
+            this.googlesettings.Controls.Add(this.panel7);
+            this.googlesettings.Location = new System.Drawing.Point(3, 189);
+            this.googlesettings.Margin = new System.Windows.Forms.Padding(0);
+            this.googlesettings.Name = "googlesettings";
+            this.googlesettings.Size = new System.Drawing.Size(248, 58);
+            this.googlesettings.TabIndex = 14;
+            this.googlesettings.Visible = googlebutton.Checked;
             // 
             // panel8
             // 
@@ -387,26 +360,13 @@ namespace plagiarism
             // collectionbutton
             // 
             this.collectionbutton.AutoSize = true;
-            this.collectionbutton.Checked = true;
             this.collectionbutton.Location = new System.Drawing.Point(212, 7);
             this.collectionbutton.Name = "collectionbutton";
             this.collectionbutton.Size = new System.Drawing.Size(80, 17);
             this.collectionbutton.TabIndex = 6;
-            this.collectionbutton.TabStop = true;
             this.collectionbutton.Text = "Коллекция";
             this.collectionbutton.UseVisualStyleBackColor = true;
             this.collectionbutton.CheckedChanged += new System.EventHandler(this.collectionbutton_CheckedChanged);
-            // 
-            // googlebutton
-            // 
-            this.googlebutton.AutoSize = true;
-            this.googlebutton.Location = new System.Drawing.Point(133, 7);
-            this.googlebutton.Name = "googlebutton";
-            this.googlebutton.Size = new System.Drawing.Size(73, 17);
-            this.googlebutton.TabIndex = 5;
-            this.googlebutton.Text = "Интернет";
-            this.googlebutton.UseVisualStyleBackColor = true;
-            this.googlebutton.CheckedChanged += new System.EventHandler(this.googlebutton_CheckedChanged);
             // 
             // label4
             // 
@@ -665,13 +625,11 @@ namespace plagiarism
             this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.collectionsettings.ResumeLayout(false);
-            this.panellength.ResumeLayout(false);
-            this.panellength.PerformLayout();
-            this.panel11.ResumeLayout(false);
-            this.panel11.PerformLayout();
             this.panel12.ResumeLayout(false);
             this.panel12.PerformLayout();
-            this.deletecollect.ResumeLayout(false);
+            this.panel11.ResumeLayout(false);
+            this.panel11.PerformLayout();
+            this.googlesettings.ResumeLayout(false);
             this.panel8.ResumeLayout(false);
             this.panel8.PerformLayout();
             this.panel7.ResumeLayout(false);
@@ -723,7 +681,7 @@ namespace plagiarism
         private System.Windows.Forms.Label finishlabel;
         private System.Windows.Forms.Label results;
         private System.Windows.Forms.ListBox resultbox;
-        private System.Windows.Forms.Panel deletecollect;
+        private System.Windows.Forms.Panel googlesettings;
         private System.Windows.Forms.CheckBox deletecheck;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ComboBox filescount;
@@ -732,15 +690,11 @@ namespace plagiarism
         private System.Windows.Forms.Panel panel7;
         private System.Windows.Forms.Panel collectionsettings;
         private System.Windows.Forms.Panel panel11;
-        private System.Windows.Forms.RadioButton radioButton2;
         private System.Windows.Forms.RadioButton radioButton1;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Panel panel12;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ComboBox filesformat;
-        private System.Windows.Forms.Panel panellength;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.ComboBox shinglelength;
 
         private static string ReadFile(string path, bool inputfile)
         {
@@ -750,6 +704,7 @@ namespace plagiarism
                 case "pdf":
                     var stripper = new PDFTextStripper();
                     var doc = PDDocument.load(path);
+                    
                     if (inputfile)
                     {
                         var sw = new StreamWriter("./programfiles/suspicious.fail");
@@ -870,6 +825,8 @@ namespace plagiarism
             }
             _sw.Close();
         }
+
+        public RadioButton radioButton2;
     }
 }
 
