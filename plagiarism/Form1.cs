@@ -239,8 +239,7 @@ namespace plagiarism
             _sr = new StreamReader("./programfiles/refs.fail", Encoding.UTF8);
             for (var i = 0; i < foundFilesCount; i++)
             {
-                var backloader = new BackgroundWorker
-                    {WorkerSupportsCancellation = true, WorkerReportsProgress = true};
+                var backloader = new BackgroundWorker();
                 backloader.DoWork += BackloaderOnDoWork;
                 backloader.RunWorkerCompleted += BackloaderOnRunWorkerCompleted;
                 try
@@ -264,15 +263,29 @@ namespace plagiarism
                 _sw.WriteLine(stat);
             }
             _sw.Close();
+            var highest = 0;
+            var beststr = new string('\0', 0);
+            foreach (string str in resultbox.Items)
+            {
+                var tmp = Convert.ToInt32(str.Substring(str.LastIndexOf(':') + 1));
+                if (highest >= tmp) continue;
+                highest = tmp;
+                beststr = str;
+            }
+            var besttext = ReadFile("./programfiles/" + beststr.Substring(0, beststr.IndexOf(' ')), false);
+            var shingles = new Shingles(Delims, 5);
+            _sw = new StreamWriter("./programfiles/plagiarisedtext.fail");
+            //_sw.Write(shingles.FindPlagiarism(_fullText, besttext, 5));
+            _sw.Close();
             resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
         private string ShingleDetect(string filename)
         {
-            const string heavy = "heavy: ";
-            const string cut = "cut: ";
-            const string non = "non: ";
-            const string light = "light: ";
+            const string heavy = "1: ";
+            const string cut = "1: ";
+            const string non = "0: ";
+            const string light = "1: ";
             var result = "";
             var shingles = new Shingles(Delims, 1);
             string compText;
@@ -282,7 +295,7 @@ namespace plagiarism
             }
             catch (Exception e)
             {
-                return filename + " fail " + e.Message;
+                return filename + " fail " + e.Message + " plagiarism:0";
             }
             Monitor.Enter(_fullText);
             var fulltext = _fullText;
@@ -290,35 +303,35 @@ namespace plagiarism
             var similarity = new int[4];
             result += filename + " - ";
             similarity[0] = (int)shingles.CompareStrings(fulltext, compText, 1);
-            if (similarity[0] < 50)
+            if (similarity[0] < 48)
             {
-                result += non + (similarity[0] + "% совпадения на " + 1 + " этапе");
+                result += non + (similarity[0] + "% совпадения на этапе" + 1);
                 return result;
             }
-            similarity[1] = (int)shingles.CompareStrings(fulltext, compText, 5);
-            if (similarity[1] < 29)
+            similarity[1] = (int)shingles.CompareStrings(fulltext, compText, 3);
+            if (similarity[1] < 5)
             {
-                result += non + (similarity[1] + "% совпадения на " + 2 + " этапе");
+                result += non + (similarity[1] + "% совпадения на этапе" + 2);
                 return result;
             }
             if (similarity[1] < 45)
             {
-                result += heavy + (similarity[1] + "% совпадения на " + 2 + " этапе");
+                result += heavy + (similarity[1] + "% совпадения на этапе" + 2);
                 return result;
             }
 
-            similarity[2] = (int)shingles.CompareStrings(fulltext, compText, 7);
+            similarity[2] = (int)shingles.CompareStrings(fulltext, compText, 10);
             if (similarity[2] < 60)
             {
-                result += heavy + (similarity[2] + "% совпадения на " + 3 + " этапе");
+                result += heavy + (similarity[2] + "% совпадения на этапе" + 3);
                 return result;
             }
             if (similarity[2] < 85)
             {
-                result += light + (similarity[2] + "% совпадения на " + 3 + " этапе");
+                result += light + (similarity[2] + "% совпадения на этапе" + 3);
                 return result;
             }
-            result += cut + (similarity[2] + "% совпадения на " + 3 + " этапе");
+            result += cut + (similarity[2] + "% совпадения на этапе" + 3);
             return result;
         }
 
@@ -409,13 +422,13 @@ namespace plagiarism
                 var response = (HttpWebResponse) request.GetResponse();
                 response.Close();
                 var filesize = (int) response.ContentLength/1024;
-                if (filesize > 1 && filesize <= 10*1024)
+                if (filesize > 1 && filesize <= 6*1024)
                 {
                     client.DownloadFile(reference, "./programfiles/" + filename);
                 }
                 else
                 {
-                    doWorkEventArgs.Result += "Ненужный файл " + filename + " пропущен";
+                    doWorkEventArgs.Result += filename + ": битая ссылка или файл слишком большой";
                     return;
                 }
                 if (shinglebutton.Checked)
@@ -423,9 +436,9 @@ namespace plagiarism
                     doWorkEventArgs.Result += ShingleDetect(filename);
                 }
             }
-            catch (WebException)
+            catch (WebException web)
             {
-                doWorkEventArgs.Result = "Файл " + filename + " не скачался";
+                doWorkEventArgs.Result = filename + ": " + web.Response;
             }
             catch (Exception)
             {
