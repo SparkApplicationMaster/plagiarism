@@ -307,7 +307,7 @@ namespace plagiarism
                 var response = (HttpWebResponse)request.GetResponse();
                 response.Close();
                 var filesize = (int)response.ContentLength / 1024;
-                if (filesize > 1 && filesize <= 6 * 1024)
+                if (filesize > 1 && filesize <= 8 * 1024)
                 {
                     client.DownloadFile(reference, "./programfiles/" + filename);
                 }

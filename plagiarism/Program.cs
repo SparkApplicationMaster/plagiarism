@@ -12,7 +12,6 @@ namespace plagiarism
         [STAThread]
         static void Main()
         {
-            Directory.CreateDirectory("./programfiles");
             Directory.CreateDirectory("./userfiles");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
