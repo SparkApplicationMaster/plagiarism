@@ -10,7 +10,6 @@ using System.Web;
 using System.Windows.Forms;
 using Iveonik.Stemmers;
 using Wintellect.PowerCollections;
-using dataAnalyze.Algorithms;
 using org.apache.pdfbox.pdmodel;
 using org.apache.pdfbox.util;
 using Timer = System.Windows.Forms.Timer;
@@ -263,20 +262,6 @@ namespace plagiarism
                 _sw.WriteLine(stat);
             }
             _sw.Close();
-            var highest = 0;
-            var beststr = new string('\0', 0);
-            foreach (string str in resultbox.Items)
-            {
-                var tmp = Convert.ToInt32(str.Substring(str.LastIndexOf(':') + 1));
-                if (highest >= tmp) continue;
-                highest = tmp;
-                beststr = str;
-            }
-            var besttext = ReadFile("./programfiles/" + beststr.Substring(0, beststr.IndexOf(' ')), false);
-            var shingles = new Shingles(Delims, 5);
-            _sw = new StreamWriter("./programfiles/plagiarisedtext.fail");
-            //_sw.Write(shingles.FindPlagiarism(_fullText, besttext, 5));
-            _sw.Close();
             resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
@@ -287,7 +272,7 @@ namespace plagiarism
             const string non = "0: ";
             const string light = "1: ";
             var result = "";
-            var shingles = new Shingles(Delims, 1);
+            var shingles = new Shingles();
             string compText;
             try
             {
@@ -305,34 +290,59 @@ namespace plagiarism
             similarity[0] = (int)shingles.CompareStrings(fulltext, compText, 1);
             if (similarity[0] < 48)
             {
-                result += non + (similarity[0] + "% совпадения на этапе" + 1);
+                result += non + (similarity[0] + "% совпадения на этапе " + 1);
                 return result;
             }
             similarity[1] = (int)shingles.CompareStrings(fulltext, compText, 3);
             if (similarity[1] < 5)
             {
-                result += non + (similarity[1] + "% совпадения на этапе" + 2);
+                result += non + (similarity[1] + "% совпадения на этапе " + 2);
                 return result;
             }
             if (similarity[1] < 45)
             {
-                result += heavy + (similarity[1] + "% совпадения на этапе" + 2);
+                result += heavy + (similarity[1] + "% совпадения на этапе " + 2);
+                result += FindPlagiarism(fulltext, compText);
                 return result;
             }
 
             similarity[2] = (int)shingles.CompareStrings(fulltext, compText, 10);
             if (similarity[2] < 60)
             {
-                result += heavy + (similarity[2] + "% совпадения на этапе" + 3);
+                result += heavy + (similarity[2] + "% совпадения на этапе " + 3);
+                result += FindPlagiarism(fulltext, compText);
                 return result;
             }
             if (similarity[2] < 85)
             {
-                result += light + (similarity[2] + "% совпадения на этапе" + 3);
+                result += light + (similarity[2] + "% совпадения на этапе " + 3);
+                result += FindPlagiarism(fulltext, compText);
                 return result;
             }
-            result += cut + (similarity[2] + "% совпадения на этапе" + 3);
+            result += cut + (similarity[2] + "% совпадения на этапе " + 3);
+            result += FindPlagiarism(fulltext, compText);
             return result;
+        }
+
+        private string FindPlagiarism(string fulltext, string compText)
+        {
+            var shingles = new Shingles();
+            var result = "";
+            var separator = new string[1];
+            separator[0] = "\n\n";
+            var split1 = fulltext.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            var split2 = compText.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var s1 in split1)
+            {
+                foreach (var s2 in split2)
+                {
+                    var similarity = (int)shingles.CompareStrings(s1, s2, 1);
+                    if (similarity <= 70) continue;
+                    result += s2 + "\n";
+                    break;
+                }
+            }
+            return result.Length == 0 ? "" : "; found plagiarism: " + result;
         }
 
         private void StatisticCollect()
