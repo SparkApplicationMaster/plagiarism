@@ -48,6 +48,12 @@ namespace plagiarism
             filescount.SelectedItem = "10";
         }
 
+        /// <summary>
+        /// Считывает файл в строку, принимаются файлы PDF и TXT
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="inputfile"></param>
+        /// <returns></returns>
         private static string ReadFile(string path, bool inputfile)
         {
             string resultstr;
@@ -81,6 +87,10 @@ namespace plagiarism
             return resultstr;
         }
 
+        /// <summary>
+        /// Строит словарь из уникальных слов и количества их использования
+        /// </summary>
+        /// <returns></returns>
         private void GetDictionary()
         {
             var stoprd = new StreamReader("./programfiles/stopwords.fail", Encoding.GetEncoding(1251));
@@ -134,6 +144,10 @@ namespace plagiarism
             _sw.Close();
         }
 
+        /// <summary>
+        /// Получает самые частоиспользуемые в тексте слова и заявляет,что они ключевые
+        /// </summary>
+        /// <returns></returns>
         private void GetKeywords()
         {
             var count = _dictWordCount.Count;
@@ -185,6 +199,10 @@ namespace plagiarism
             _sw.Close();
         }
 
+        /// <summary>
+        /// Делает запрос в Google по ключевым словам на получение страниц со ссылками
+        /// </summary>
+        /// <returns></returns>
         private void GoogleRequest()
         {
             var reqstr = new string('\0', 0);
@@ -210,6 +228,10 @@ namespace plagiarism
             _sw.Close();
         }
 
+        /// <summary>
+        /// Выдирает из HTML кода ссылки на PDF-файлы
+        /// </summary>
+        /// <returns></returns>
         private void GetReferences()
         {
             _sw = new StreamWriter("./programfiles/refs.fail", false, Encoding.UTF8);
@@ -231,6 +253,11 @@ namespace plagiarism
             _sw.Close();
         }
 
+        /// <summary>
+        /// Многопоточно скачивает файлы и проверяет каждый на сходство с исходным
+        /// </summary>
+        /// /// <param name="x"></param>
+        /// <returns></returns>
         private void DownloadFiles(int x = 0)
         {
             var foundFilesCount = x > _index ? _index : x;
@@ -265,6 +292,67 @@ namespace plagiarism
             resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
+        /// <summary>
+        /// Скачивание и проверка каждого файла в отдельном потоке
+        /// </summary>
+        /// <returns></returns>
+        private void BackloaderOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
+        {
+            var reference = (string)doWorkEventArgs.Argument;
+            var filename = reference.Substring(reference.LastIndexOf('/') + 1);
+            var client = new WebClient();
+            try
+            {
+                var request = (HttpWebRequest)WebRequest.Create(new Uri(reference));
+                var response = (HttpWebResponse)request.GetResponse();
+                response.Close();
+                var filesize = (int)response.ContentLength / 1024;
+                if (filesize > 1 && filesize <= 6 * 1024)
+                {
+                    client.DownloadFile(reference, "./programfiles/" + filename);
+                }
+                else
+                {
+                    doWorkEventArgs.Result += filename + ": битая ссылка или файл слишком большой";
+                    return;
+                }
+                if (shinglebutton.Checked)
+                {
+                    doWorkEventArgs.Result += ShingleDetect(filename);
+                }
+            }
+            catch (WebException web)
+            {
+                doWorkEventArgs.Result = filename + ": " + web.Response;
+            }
+            catch (Exception)
+            {
+                doWorkEventArgs.Result = "Проверка " + filename + " не удалась";
+            }
+        }
+
+        /// <summary>
+        /// Оповещение о том,что поток завершил работу
+        /// </summary>
+        /// <returns></returns>
+        private void BackloaderOnRunWorkerCompleted(object sender,
+            RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
+        {
+            Monitor.Enter(resultbox);
+            resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
+            if (progressBar1.Value + (100 - 12) / _needed <= 100)
+            {
+                progressBar1.Value += (100 - 12) / _needed;
+            }
+            _checkedfiles++;
+            Monitor.Exit(resultbox);
+        }
+
+        /// <summary>
+        /// Определяет,был ли плагиат в исходном тексте
+        /// </summary>
+        /// /// <param name="filename"></param>
+        /// <returns>Степень совпадения и сплагиаченные абзацы</returns>
         private string ShingleDetect(string filename)
         {
             const string heavy = "1: ";
@@ -324,14 +412,21 @@ namespace plagiarism
             return result;
         }
 
-        private string FindPlagiarism(string fulltext, string compText)
+
+        /// <summary>
+        /// Ищет совпадающие абзацы в двух текстах
+        /// </summary>
+        /// <param name="inputtext"></param>
+        /// <param name="comptext"></param>
+        /// <returns></returns>
+        private string FindPlagiarism(string inputtext, string comptext)
         {
             var shingles = new Shingles();
             var result = "";
             var separator = new string[1];
             separator[0] = "\n\n";
-            var split1 = fulltext.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-            var split2 = compText.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            var split1 = inputtext.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            var split2 = comptext.Split(separator, StringSplitOptions.RemoveEmptyEntries);
             foreach (var s1 in split1)
             {
                 foreach (var s2 in split2)
@@ -345,6 +440,10 @@ namespace plagiarism
             return result.Length == 0 ? "" : "; found plagiarism: " + result;
         }
 
+        /// <summary>
+        /// Проверяет коллекцию на плагиат
+        /// </summary>
+        /// <returns></returns>
         private void StatisticCollect()
         {
             var compared = 0;
@@ -381,6 +480,10 @@ namespace plagiarism
             resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
+        /// <summary>
+        /// Проверяет тестсет
+        /// </summary>
+        /// <returns></returns>
         private void Test()
         {
             for (char i = 'a'; i <= 'e'; i++)
@@ -421,54 +524,10 @@ namespace plagiarism
             resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
-        private void BackloaderOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
-        {
-            var reference = (string) doWorkEventArgs.Argument;
-            var filename = reference.Substring(reference.LastIndexOf('/') + 1);
-            var client = new WebClient();
-            try
-            {
-                var request = (HttpWebRequest) WebRequest.Create(new Uri(reference));
-                var response = (HttpWebResponse) request.GetResponse();
-                response.Close();
-                var filesize = (int) response.ContentLength/1024;
-                if (filesize > 1 && filesize <= 6*1024)
-                {
-                    client.DownloadFile(reference, "./programfiles/" + filename);
-                }
-                else
-                {
-                    doWorkEventArgs.Result += filename + ": битая ссылка или файл слишком большой";
-                    return;
-                }
-                if (shinglebutton.Checked)
-                {
-                    doWorkEventArgs.Result += ShingleDetect(filename);
-                }
-            }
-            catch (WebException web)
-            {
-                doWorkEventArgs.Result = filename + ": " + web.Response;
-            }
-            catch (Exception)
-            {
-                doWorkEventArgs.Result = "Проверка " + filename + " не удалась";
-            }
-        }
-
-        private void BackloaderOnRunWorkerCompleted(object sender,
-            RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
-        {
-            Monitor.Enter(resultbox);
-            resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
-            if (progressBar1.Value + (100 - 12)/_needed <= 100)
-            {
-                progressBar1.Value += (100 - 12)/_needed;
-            }
-            _checkedfiles++;
-            Monitor.Exit(resultbox);
-        }
-
+        /// <summary>
+        /// Проверка каждого файла из коллекции/тестсета в отдельном потоке
+        /// </summary>
+        /// <returns></returns>
         private void ComparerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
         {
             doWorkEventArgs.Result = ShingleDetect((string) doWorkEventArgs.Argument);
@@ -494,6 +553,10 @@ namespace plagiarism
             backgroundWorker1.RunWorkerAsync();
         }
 
+        /// <summary>
+        /// Основная часть программы
+        /// </summary>
+        /// <returns></returns>
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             if (testbutton.Checked)

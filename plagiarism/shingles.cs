@@ -21,6 +21,13 @@ namespace plagiarism
             return _shingleLength;
         }
 
+        /// <summary>
+        /// Проверка двух файлов на схожесть
+        /// </summary>
+        /// <param name="s1"></param>
+        /// <param name="s2"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
         public double CompareStrings(string s1, string s2, int length)
         {
             _shingleLength = length;
@@ -40,7 +47,7 @@ namespace plagiarism
         }
 
         /// <summary>
-        /// get shingles and calculate hash for everyone
+        /// Получение хэшей шинглов
         /// </summary>
         /// <param name="source"></param>
         /// <param name="shingleLength"></param>
