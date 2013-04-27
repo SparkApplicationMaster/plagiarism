@@ -28,6 +28,7 @@ namespace plagiarism
             if (disposing && (components != null))
             {
                 _sr.Dispose();
+                _sw.Dispose();
                 components.Dispose();
             }
             base.Dispose(disposing);
@@ -42,11 +43,8 @@ namespace plagiarism
         private void InitializeComponent()
         {
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.engbutton = new System.Windows.Forms.RadioButton();
-            this.rusbutton = new System.Windows.Forms.RadioButton();
-            this.label1 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.collectionsettings = new System.Windows.Forms.Panel();
             this.panel12 = new System.Windows.Forms.Panel();
             this.label8 = new System.Windows.Forms.Label();
@@ -67,16 +65,11 @@ namespace plagiarism
             this.testbutton = new System.Windows.Forms.RadioButton();
             this.googlebutton = new System.Windows.Forms.RadioButton();
             this.label4 = new System.Windows.Forms.Label();
-            this.panel4 = new System.Windows.Forms.Panel();
-            this.shinglebutton = new System.Windows.Forms.RadioButton();
-            this.label3 = new System.Windows.Forms.Label();
             this.panel6 = new System.Windows.Forms.Panel();
             this.filenamelabel = new System.Windows.Forms.Label();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.button1 = new System.Windows.Forms.Button();
             this.start = new System.Windows.Forms.Button();
-            this.shapeContainer1 = new Microsoft.VisualBasic.PowerPacks.ShapeContainer();
-            this.lineShape1 = new Microsoft.VisualBasic.PowerPacks.LineShape();
             this.panel3 = new System.Windows.Forms.Panel();
             this.resultbox = new System.Windows.Forms.ListBox();
             this.results = new System.Windows.Forms.Label();
@@ -88,7 +81,6 @@ namespace plagiarism
             this.label6 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
-            this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.collectionsettings.SuspendLayout();
             this.panel12.SuspendLayout();
@@ -97,7 +89,6 @@ namespace plagiarism
             this.panel8.SuspendLayout();
             this.panel7.SuspendLayout();
             this.panel5.SuspendLayout();
-            this.panel4.SuspendLayout();
             this.panel6.SuspendLayout();
             this.panel3.SuspendLayout();
             this.SuspendLayout();
@@ -106,70 +97,37 @@ namespace plagiarism
             // 
             this.openFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialog1_FileOk);
             // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.engbutton);
-            this.panel1.Controls.Add(this.rusbutton);
-            this.panel1.Controls.Add(this.label1);
-            this.panel1.Location = new System.Drawing.Point(2, 65);
-            this.panel1.Margin = new System.Windows.Forms.Padding(0);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(248, 31);
-            this.panel1.TabIndex = 5;
-            // 
-            // engbutton
-            // 
-            this.engbutton.AutoSize = true;
-            this.engbutton.Checked = true;
-            this.engbutton.Location = new System.Drawing.Point(83, 7);
-            this.engbutton.Name = "engbutton";
-            this.engbutton.Size = new System.Drawing.Size(85, 17);
-            this.engbutton.TabIndex = 6;
-            this.engbutton.TabStop = true;
-            this.engbutton.Text = "Английский";
-            this.engbutton.UseVisualStyleBackColor = true;
-            // 
-            // rusbutton
-            // 
-            this.rusbutton.AutoSize = true;
-            this.rusbutton.Location = new System.Drawing.Point(174, 7);
-            this.rusbutton.Name = "rusbutton";
-            this.rusbutton.Size = new System.Drawing.Size(67, 17);
-            this.rusbutton.TabIndex = 5;
-            this.rusbutton.Text = "Русский";
-            this.rusbutton.UseVisualStyleBackColor = true;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(2, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(75, 13);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "Язык текста:";
-            // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.checkBox1);
             this.panel2.Controls.Add(this.collectionsettings);
             this.panel2.Controls.Add(this.panel11);
             this.panel2.Controls.Add(this.googlesettings);
-            this.panel2.Controls.Add(this.panel1);
             this.panel2.Controls.Add(this.panel5);
-            this.panel2.Controls.Add(this.panel4);
             this.panel2.Controls.Add(this.panel6);
             this.panel2.Controls.Add(this.splitter1);
             this.panel2.Controls.Add(this.button1);
             this.panel2.Controls.Add(this.start);
-            this.panel2.Controls.Add(this.shapeContainer1);
             this.panel2.Location = new System.Drawing.Point(-2, 0);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(706, 320);
             this.panel2.TabIndex = 6;
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(14, 68);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(216, 17);
+            this.checkBox1.TabIndex = 16;
+            this.checkBox1.Text = "Показать расширенные результаты?";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
             // collectionsettings
             // 
             this.collectionsettings.Controls.Add(this.panel12);
-            this.collectionsettings.Location = new System.Drawing.Point(1, 189);
+            this.collectionsettings.Location = new System.Drawing.Point(1, 150);
             this.collectionsettings.Margin = new System.Windows.Forms.Padding(0);
             this.collectionsettings.Name = "collectionsettings";
             this.collectionsettings.Size = new System.Drawing.Size(293, 41);
@@ -224,7 +182,7 @@ namespace plagiarism
             this.panel11.Controls.Add(this.radioButton2);
             this.panel11.Controls.Add(this.radioButton1);
             this.panel11.Controls.Add(this.label7);
-            this.panel11.Location = new System.Drawing.Point(3, 158);
+            this.panel11.Location = new System.Drawing.Point(3, 119);
             this.panel11.Margin = new System.Windows.Forms.Padding(0);
             this.panel11.Name = "panel11";
             this.panel11.Size = new System.Drawing.Size(292, 31);
@@ -267,7 +225,7 @@ namespace plagiarism
             // 
             this.googlesettings.Controls.Add(this.panel8);
             this.googlesettings.Controls.Add(this.panel7);
-            this.googlesettings.Location = new System.Drawing.Point(3, 189);
+            this.googlesettings.Location = new System.Drawing.Point(3, 150);
             this.googlesettings.Margin = new System.Windows.Forms.Padding(0);
             this.googlesettings.Name = "googlesettings";
             this.googlesettings.Size = new System.Drawing.Size(248, 58);
@@ -332,6 +290,7 @@ namespace plagiarism
             "3",
             "4",
             "5",
+            "7",
             "10",
             "15",
             "20",
@@ -348,7 +307,7 @@ namespace plagiarism
             this.panel5.Controls.Add(this.collectionbutton);
             this.panel5.Controls.Add(this.googlebutton);
             this.panel5.Controls.Add(this.label4);
-            this.panel5.Location = new System.Drawing.Point(2, 127);
+            this.panel5.Location = new System.Drawing.Point(2, 88);
             this.panel5.Margin = new System.Windows.Forms.Padding(0);
             this.panel5.Name = "panel5";
             this.panel5.Size = new System.Drawing.Size(357, 31);
@@ -387,38 +346,6 @@ namespace plagiarism
             this.label4.TabIndex = 4;
             this.label4.Text = "Файлы для сравнения:";
             // 
-            // panel4
-            // 
-            this.panel4.Controls.Add(this.shinglebutton);
-            this.panel4.Controls.Add(this.label3);
-            this.panel4.Location = new System.Drawing.Point(2, 96);
-            this.panel4.Margin = new System.Windows.Forms.Padding(0);
-            this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(169, 31);
-            this.panel4.TabIndex = 11;
-            // 
-            // shinglebutton
-            // 
-            this.shinglebutton.AutoSize = true;
-            this.shinglebutton.Checked = true;
-            this.shinglebutton.Location = new System.Drawing.Point(101, 7);
-            this.shinglebutton.Name = "shinglebutton";
-            this.shinglebutton.Size = new System.Drawing.Size(65, 17);
-            this.shinglebutton.TabIndex = 6;
-            this.shinglebutton.TabStop = true;
-            this.shinglebutton.Text = "Шинглы";
-            this.shinglebutton.UseVisualStyleBackColor = true;
-            this.shinglebutton.CheckedChanged += new System.EventHandler(this.shinglebutton_CheckedChanged);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(2, 9);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(93, 13);
-            this.label3.TabIndex = 4;
-            this.label3.Text = "Метод проверки:";
-            // 
             // panel6
             // 
             this.panel6.Controls.Add(this.filenamelabel);
@@ -449,7 +376,7 @@ namespace plagiarism
             // button1
             // 
             this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button1.Location = new System.Drawing.Point(3, 0);
+            this.button1.Location = new System.Drawing.Point(2, 0);
             this.button1.Margin = new System.Windows.Forms.Padding(0);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(248, 34);
@@ -464,30 +391,11 @@ namespace plagiarism
             this.start.Location = new System.Drawing.Point(486, 0);
             this.start.Margin = new System.Windows.Forms.Padding(0);
             this.start.Name = "start";
-            this.start.Size = new System.Drawing.Size(219, 319);
+            this.start.Size = new System.Drawing.Size(220, 319);
             this.start.TabIndex = 7;
             this.start.Text = "Запуск";
             this.start.UseVisualStyleBackColor = true;
             this.start.Click += new System.EventHandler(this.start_Click);
-            // 
-            // shapeContainer1
-            // 
-            this.shapeContainer1.Location = new System.Drawing.Point(0, 0);
-            this.shapeContainer1.Margin = new System.Windows.Forms.Padding(0);
-            this.shapeContainer1.Name = "shapeContainer1";
-            this.shapeContainer1.Shapes.AddRange(new Microsoft.VisualBasic.PowerPacks.Shape[] {
-            this.lineShape1});
-            this.shapeContainer1.Size = new System.Drawing.Size(706, 320);
-            this.shapeContainer1.TabIndex = 10;
-            this.shapeContainer1.TabStop = false;
-            // 
-            // lineShape1
-            // 
-            this.lineShape1.Name = "lineShape1";
-            this.lineShape1.X1 = 0;
-            this.lineShape1.X2 = 75;
-            this.lineShape1.Y1 = 0;
-            this.lineShape1.Y2 = 23;
             // 
             // panel3
             // 
@@ -512,7 +420,6 @@ namespace plagiarism
             this.resultbox.Location = new System.Drawing.Point(1, 30);
             this.resultbox.Name = "resultbox";
             this.resultbox.Size = new System.Drawing.Size(702, 147);
-            this.resultbox.Sorted = true;
             this.resultbox.TabIndex = 9;
             // 
             // results
@@ -606,10 +513,9 @@ namespace plagiarism
             this.Controls.Add(this.panel3);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "Form1";
-            this.Text = "Form1";
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.Text = "Plagiarism";
             this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.collectionsettings.ResumeLayout(false);
             this.panel12.ResumeLayout(false);
             this.panel12.PerformLayout();
@@ -622,8 +528,6 @@ namespace plagiarism
             this.panel7.PerformLayout();
             this.panel5.ResumeLayout(false);
             this.panel5.PerformLayout();
-            this.panel4.ResumeLayout(false);
-            this.panel4.PerformLayout();
             this.panel6.ResumeLayout(false);
             this.panel6.PerformLayout();
             this.panel3.ResumeLayout(false);
@@ -635,20 +539,11 @@ namespace plagiarism
         #endregion
 
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.RadioButton engbutton;
-        private System.Windows.Forms.RadioButton rusbutton;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Button start;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Splitter splitter1;
-        private Microsoft.VisualBasic.PowerPacks.ShapeContainer shapeContainer1;
-        private Microsoft.VisualBasic.PowerPacks.LineShape lineShape1;
-        private System.Windows.Forms.Panel panel4;
-        private System.Windows.Forms.RadioButton shinglebutton;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Panel panel5;
         private System.Windows.Forms.RadioButton collectionbutton;
         private System.Windows.Forms.RadioButton googlebutton;
@@ -681,6 +576,7 @@ namespace plagiarism
         private System.Windows.Forms.ComboBox filesformat;
         public RadioButton radioButton2;
         private RadioButton testbutton;
+        private CheckBox checkBox1;
     }
 }
 

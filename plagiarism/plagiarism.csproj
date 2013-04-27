@@ -207,7 +207,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <None Include="programfiles\stopwords.fail" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -237,103 +236,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="programfiles\g0pA_taska.txt" />
-    <Content Include="programfiles\g0pA_taskb.txt" />
-    <Content Include="programfiles\g0pA_taskc.txt" />
-    <Content Include="programfiles\g0pA_taskd.txt" />
-    <Content Include="programfiles\g0pA_taske.txt" />
-    <Content Include="programfiles\g0pB_taska.txt" />
-    <Content Include="programfiles\g0pB_taskb.txt" />
-    <Content Include="programfiles\g0pB_taskc.txt" />
-    <Content Include="programfiles\g0pB_taskd.txt" />
-    <Content Include="programfiles\g0pB_taske.txt" />
-    <Content Include="programfiles\g0pC_taska.txt" />
-    <Content Include="programfiles\g0pC_taskb.txt" />
-    <Content Include="programfiles\g0pC_taskc.txt" />
-    <Content Include="programfiles\g0pC_taskd.txt" />
-    <Content Include="programfiles\g0pC_taske.txt" />
-    <Content Include="programfiles\g0pD_taska.txt" />
-    <Content Include="programfiles\g0pD_taskb.txt" />
-    <Content Include="programfiles\g0pD_taskc.txt" />
-    <Content Include="programfiles\g0pD_taskd.txt" />
-    <Content Include="programfiles\g0pD_taske.txt" />
-    <Content Include="programfiles\g0pE_taska.txt" />
-    <Content Include="programfiles\g0pE_taskb.txt" />
-    <Content Include="programfiles\g0pE_taskc.txt" />
-    <Content Include="programfiles\g0pE_taskd.txt" />
-    <Content Include="programfiles\g0pE_taske.txt" />
-    <Content Include="programfiles\g1pA_taska.txt" />
-    <Content Include="programfiles\g1pA_taskb.txt" />
-    <Content Include="programfiles\g1pA_taskc.txt" />
-    <Content Include="programfiles\g1pA_taskd.txt" />
-    <Content Include="programfiles\g1pA_taske.txt" />
-    <Content Include="programfiles\g1pB_taska.txt" />
-    <Content Include="programfiles\g1pB_taskb.txt" />
-    <Content Include="programfiles\g1pB_taskc.txt" />
-    <Content Include="programfiles\g1pB_taskd.txt" />
-    <Content Include="programfiles\g1pB_taske.txt" />
-    <Content Include="programfiles\g1pD_taska.txt" />
-    <Content Include="programfiles\g1pD_taskb.txt" />
-    <Content Include="programfiles\g1pD_taskc.txt" />
-    <Content Include="programfiles\g1pD_taskd.txt" />
-    <Content Include="programfiles\g1pD_taske.txt" />
-    <Content Include="programfiles\g2pA_taska.txt" />
-    <Content Include="programfiles\g2pA_taskb.txt" />
-    <Content Include="programfiles\g2pA_taskc.txt" />
-    <Content Include="programfiles\g2pA_taskd.txt" />
-    <Content Include="programfiles\g2pA_taske.txt" />
-    <Content Include="programfiles\g2pB_taska.txt" />
-    <Content Include="programfiles\g2pB_taskb.txt" />
-    <Content Include="programfiles\g2pB_taskc.txt" />
-    <Content Include="programfiles\g2pB_taskd.txt" />
-    <Content Include="programfiles\g2pB_taske.txt" />
-    <Content Include="programfiles\g2pC_taska.txt" />
-    <Content Include="programfiles\g2pC_taskb.txt" />
-    <Content Include="programfiles\g2pC_taskc.txt" />
-    <Content Include="programfiles\g2pC_taskd.txt" />
-    <Content Include="programfiles\g2pC_taske.txt" />
-    <Content Include="programfiles\g2pE_taska.txt" />
-    <Content Include="programfiles\g2pE_taskb.txt" />
-    <Content Include="programfiles\g2pE_taskc.txt" />
-    <Content Include="programfiles\g2pE_taskd.txt" />
-    <Content Include="programfiles\g2pE_taske.txt" />
-    <Content Include="programfiles\g3pA_taska.txt" />
-    <Content Include="programfiles\g3pA_taskb.txt" />
-    <Content Include="programfiles\g3pA_taskc.txt" />
-    <Content Include="programfiles\g3pA_taskd.txt" />
-    <Content Include="programfiles\g3pA_taske.txt" />
-    <Content Include="programfiles\g3pB_taska.txt" />
-    <Content Include="programfiles\g3pB_taskb.txt" />
-    <Content Include="programfiles\g3pB_taskc.txt" />
-    <Content Include="programfiles\g3pB_taskd.txt" />
-    <Content Include="programfiles\g3pB_taske.txt" />
-    <Content Include="programfiles\g3pC_taska.txt" />
-    <Content Include="programfiles\g3pC_taskb.txt" />
-    <Content Include="programfiles\g3pC_taskc.txt" />
-    <Content Include="programfiles\g3pC_taskd.txt" />
-    <Content Include="programfiles\g3pC_taske.txt" />
-    <Content Include="programfiles\g4pB_taska.txt" />
-    <Content Include="programfiles\g4pB_taskb.txt" />
-    <Content Include="programfiles\g4pB_taskc.txt" />
-    <Content Include="programfiles\g4pB_taskd.txt" />
-    <Content Include="programfiles\g4pB_taske.txt" />
-    <Content Include="programfiles\g4pC_taska.txt" />
-    <Content Include="programfiles\g4pC_taskb.txt" />
-    <Content Include="programfiles\g4pC_taskc.txt" />
-    <Content Include="programfiles\g4pC_taskd.txt" />
-    <Content Include="programfiles\g4pC_taske.txt" />
-    <Content Include="programfiles\g4pD_taska.txt" />
-    <Content Include="programfiles\g4pD_taskb.txt" />
-    <Content Include="programfiles\g4pD_taskc.txt" />
-    <Content Include="programfiles\g4pD_taskd.txt" />
-    <Content Include="programfiles\g4pD_taske.txt" />
-    <Content Include="programfiles\g4pE_taska.txt" />
-    <Content Include="programfiles\g4pE_taskb.txt" />
-    <Content Include="programfiles\g4pE_taskc.txt" />
-    <Content Include="programfiles\g4pE_taskd.txt" />
-    <Content Include="programfiles\g4pE_taske.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
