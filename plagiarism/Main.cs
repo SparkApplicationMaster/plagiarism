@@ -17,7 +17,7 @@ using Timer = System.Windows.Forms.Timer;
 
 namespace plagiarism
 {
-    public partial class Form1 : Form
+    public partial class Main : Form
     {
         private const string Delims = " -=.,_{}*\\\n\r\"/?[];:()!\'’”„";
         private static readonly string[] Refs = new string[50];
@@ -37,18 +37,24 @@ namespace plagiarism
         private readonly object _resultboxblock = new object();
         private readonly object _inputtextblock = new object();
         private readonly object _progressbarblock = new object();
-        public Form1()
+        public Main()
         {
             InitializeComponent();
             filesformat.SelectedItem = "pdf";
             filescount.SelectedItem = "10";
         }
 
+        /// <summary>
+        /// Заносит результат чтения файла в поле _inputText
+        /// </summary>
         private void ReadInputFile(string fileName)
         {
             _inputText = ReadFile(fileName);
         }
 
+        /// <summary>
+        /// Читает текстовый или PDF-файл
+        /// </summary>
         private static string ReadFile(string fileName)
         {
             string text;
