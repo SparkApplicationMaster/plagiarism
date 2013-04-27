@@ -2,24 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Iveonik.Stemmers;
 
 namespace plagiarism
 {
     public class Shingles
     {
-        private const string Delims = " =.,_{}*\\\n\r\"/?[];:()!\'’”„";
+        private const string Delims = " -=.,_{}*\\\n\r\"/?[];:()!\'’”„";
         public static bool Checkinputfile = true;
-        private int _shingleLength;
-
-        public void Length(int x)
-        {
-            _shingleLength = x;
-        }
-
-        public int Length()
-        {
-            return _shingleLength;
-        }
 
         /// <summary>
         /// Проверка двух файлов на схожесть
@@ -28,19 +18,18 @@ namespace plagiarism
         /// <param name="s2"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public double CompareStrings(string s1, string s2, int length)
+        public static double CompareStrings(ref string s1, ref string s2, int length)
         {
-            _shingleLength = length;
             HashSet<string> shingles1, shingles2;
             if (Checkinputfile)
             {
-                shingles1 = GetShingles(ref s1, _shingleLength);
-                shingles2 = GetShingles(ref s2, _shingleLength);
+                shingles1 = GetShingles(ref s1, length);
+                shingles2 = GetShingles(ref s2, length);
             }
             else
             {
-                shingles1 = GetShingles(ref s2, _shingleLength);
-                shingles2 = GetShingles(ref s1, _shingleLength);
+                shingles1 = GetShingles(ref s2, length);
+                shingles2 = GetShingles(ref s1, length);
             }
             var same = shingles1.Count(shingles2.Contains);
             return same/((double) (shingles1.Count()))*100;
@@ -52,11 +41,20 @@ namespace plagiarism
         /// <param name="source"></param>
         /// <param name="shingleLength"></param>
         /// <returns></returns>
-        private HashSet<string> GetShingles(ref string source, int shingleLength)
+        private static HashSet<string> GetShingles(ref string source, int shingleLength)
         {
-            string[] split = source.Split(Delims.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            var stemmer = new EnglishStemmer();
+            var split = source.Split(Delims.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            for (var index = 0; index < split.Length; index++)
+            {
+                split[index] = stemmer.Stem(split[index]);
+            }
             var shingles = new HashSet<string>();
             var tmp = "";
+            if (split.Length < shingleLength)
+            {
+                return shingles;
+            }
             for (int j = 0; j < shingleLength; j++)
             {
                 tmp += split[j];
