@@ -6,7 +6,7 @@ using Iveonik.Stemmers;
 
 namespace plagiarism
 {
-    public class Shingles
+    public static class Shingles
     {
         private const string Delims = " -=.,_{}*\\\n\r\"/?[];:()!\'’”„";
         public static bool Checkinputfile = true;
