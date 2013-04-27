@@ -72,7 +72,7 @@ namespace plagiarism
             this.start = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
             this.resultbox = new System.Windows.Forms.ListBox();
-            this.results = new System.Windows.Forms.Label();
+            this.resultslabel = new System.Windows.Forms.Label();
             this.finishlabel = new System.Windows.Forms.Label();
             this.seconds = new System.Windows.Forms.Label();
             this.timerlabel = new System.Windows.Forms.Label();
@@ -400,7 +400,7 @@ namespace plagiarism
             // panel3
             // 
             this.panel3.Controls.Add(this.resultbox);
-            this.panel3.Controls.Add(this.results);
+            this.panel3.Controls.Add(this.resultslabel);
             this.panel3.Controls.Add(this.finishlabel);
             this.panel3.Controls.Add(this.seconds);
             this.panel3.Controls.Add(this.timerlabel);
@@ -422,15 +422,15 @@ namespace plagiarism
             this.resultbox.Size = new System.Drawing.Size(702, 147);
             this.resultbox.TabIndex = 9;
             // 
-            // results
+            // resultslabel
             // 
-            this.results.AutoSize = true;
-            this.results.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.results.Location = new System.Drawing.Point(305, 9);
-            this.results.Name = "results";
-            this.results.Size = new System.Drawing.Size(90, 17);
-            this.results.TabIndex = 8;
-            this.results.Text = "Результаты:";
+            this.resultslabel.AutoSize = true;
+            this.resultslabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.resultslabel.Location = new System.Drawing.Point(305, 9);
+            this.resultslabel.Name = "resultslabel";
+            this.resultslabel.Size = new System.Drawing.Size(90, 17);
+            this.resultslabel.TabIndex = 8;
+            this.resultslabel.Text = "Результаты:";
             // 
             // finishlabel
             // 
@@ -509,8 +509,8 @@ namespace plagiarism
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(704, 319);
-            this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel3);
+            this.Controls.Add(this.panel2);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "Form1";
             this.Text = "Plagiarism";
@@ -558,7 +558,7 @@ namespace plagiarism
         private System.Windows.Forms.Panel panel6;
         private System.Windows.Forms.Label filenamelabel;
         private System.Windows.Forms.Label finishlabel;
-        private System.Windows.Forms.Label results;
+        private System.Windows.Forms.Label resultslabel;
         private System.Windows.Forms.ListBox resultbox;
         private System.Windows.Forms.Panel googlesettings;
         private System.Windows.Forms.CheckBox deletecheck;

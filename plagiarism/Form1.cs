@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -266,18 +267,18 @@ namespace plagiarism
                 }
                 else
                 {
-                    doWorkEventArgs.Result += filename + ": битая ссылка или файл слишком большой";
+                    doWorkEventArgs.Result = new Results(filename, 0, 0, null, "Файл слишком большой или кривой", false);
                     return;
                 }
-                doWorkEventArgs.Result += ShingleDetect("./Collection/" + filename);
+                doWorkEventArgs.Result = ShingleDetect("./Collection/" + filename);
             }
-            catch (WebException web)
+            catch (WebException)
             {
-                doWorkEventArgs.Result = filename + "WebFail";
+                doWorkEventArgs.Result = new Results(filename, 0, 0, null, "Ошибка связи с веб-ресурсом", false);
             }
             catch (Exception)
             {
-                doWorkEventArgs.Result = "Проверка " + filename + " не удалась";
+                doWorkEventArgs.Result = new Results(filename, 0, 0, null, "Ошибка проверки", false);
             }
         }
 
@@ -289,7 +290,8 @@ namespace plagiarism
             RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
         {
             Monitor.Enter(_resultboxblock);
-            resultbox.Items.Insert(0, runWorkerCompletedEventArgs.Result);
+            if (runWorkerCompletedEventArgs != null)
+                resultbox.Items.Insert(0, ((Results) runWorkerCompletedEventArgs.Result).ToFormatString());
             if (progressBar1.Value + (100 - 12) / _needed <= 100)
             {
                 progressBar1.Value += (100 - 12) / _needed;
@@ -303,15 +305,10 @@ namespace plagiarism
         /// </summary>
         /// /// <param name="filename"></param>
         /// <returns>Степень совпадения и сплагиаченные предложения</returns>
-        private string ShingleDetect(string filename)
+        private Results ShingleDetect(string filename)
         {
-            const string heavy = "1";
-            const string cut = "1";
-            const string non = "0";
-            const string light = "1";
             const double similarityLow1Stage = 48;
-            const double similarityLow2Stage = 5.3;
-            var result = "";
+            const double similarityLow2Stage = 5.641;
             string compText;
             try
             {
@@ -319,69 +316,74 @@ namespace plagiarism
             }
             catch (Exception e)
             {
-                return filename + "fail: "+ e.Message;
+                return new Results(filename, 0, 0, null, "fail", false);
             }
             Monitor.Enter(_inputtextblock);
             var fulltext = _inputText;
             Monitor.Exit(_inputtextblock);
             var similarity = new double[4];
             var info = new FileInfo(filename);
-            result += info.Name + ": ";
             similarity[0] = Shingles.CompareStrings(ref fulltext, ref compText, 1);
+            Results results = null;
+            string[] foundPlagiarism = null;
+            if (_showFullResults)
+            {
+                foundPlagiarism = FindPlagiarism(ref fulltext, ref compText);
+            }
             if (similarity[0] < similarityLow1Stage)
             {
-                result += non + (": " + similarity[0] + "% совпадения на этапе " + 1); 
+                results = new Results(info.Name, similarity[0], 1, null, null, false);
                 if (_showFullResults)
                 {
-                    result += FindPlagiarism(ref fulltext, ref compText);
+                    results.PlagiarisedSentences = foundPlagiarism;
                 }
-                return result;
+                return results;
             }
             similarity[1] = Shingles.CompareStrings(ref fulltext, ref compText, 3);
             if (similarity[1] < similarityLow2Stage)
             {
-                result += non + (": " + similarity[1] + "% совпадения на этапе " + 2);
+                results = new Results(info.Name, similarity[1], 2, null, null, false);
                 if (_showFullResults)
                 {
-                    result += FindPlagiarism(ref fulltext, ref compText);
+                    results.PlagiarisedSentences = foundPlagiarism;
                 }
-                return result;
+                return results;
             }
             if (similarity[1] < 45)
             {
-                result += heavy + (": " + similarity[1] + "% совпадения на этапе " + 2);
+                results = new Results(info.Name, similarity[1], 2, null, null, true);
                 if (_showFullResults)
                 {
-                    result += FindPlagiarism(ref fulltext, ref compText);
+                    results.PlagiarisedSentences = foundPlagiarism;
                 }
-                return result;
+                return results;
             }
 
             similarity[2] = Shingles.CompareStrings(ref fulltext, ref compText, 10);
             if (similarity[2] < 60)
             {
-                result += heavy + (": " + similarity[2] + "% совпадения на этапе " + 3);
+                results = new Results(info.Name, similarity[2], 3, null, null, true);
                 if (_showFullResults)
                 {
-                    result += FindPlagiarism(ref fulltext, ref compText);
+                    results.PlagiarisedSentences = foundPlagiarism;
                 }
-                return result;
+                return results;
             }
             if (similarity[2] < 85)
             {
-                result += light + (": " + similarity[2] + "% совпадения на этапе " + 3);
+                results = new Results(info.Name, similarity[2], 3, null, null, true);
                 if (_showFullResults)
                 {
-                    result += FindPlagiarism(ref fulltext, ref compText);
+                    results.PlagiarisedSentences = foundPlagiarism;
                 }
-                return result;
+                return results;
             }
-            result += cut + (": " + similarity[2] + "% совпадения на этапе " + 3);
+            results = new Results(info.Name, similarity[2], 3, null, null, true);
             if (_showFullResults)
             {
-                result += FindPlagiarism(ref fulltext, ref compText);
+                results.PlagiarisedSentences = foundPlagiarism;
             }
-            return result;
+            return results;
         }
 
 
@@ -391,37 +393,38 @@ namespace plagiarism
         /// <param name="inputtext"></param>
         /// <param name="comptext"></param>
         /// <returns></returns>
-        private string FindPlagiarism(ref string inputtext, ref string comptext)
+        private string[] FindPlagiarism(ref string inputtext, ref string comptext)
         {
-            var result = "";
             var separator = new string[5];
             try
             {
-                separator[0] = "\n\n";
+                separator[0] = "\n";
                 separator[1] = "\t";
                 separator[2] = "!";
                 separator[3] = "?";
                 separator[4] = ".";
+                int shift = 0;
                 if (testbutton.Checked || _splitinputtext == null)
                 {
                     _splitinputtext = inputtext.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                 }
                 var split2 = comptext.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                var result = new string[_splitinputtext.Length];
                 for (int i = 0; i < _splitinputtext.Length; i++)
                 {
                     for (int index = 0; index < split2.Length; index++)
                     {
                         var similarity = (int)Shingles.CompareStrings(ref _splitinputtext[i], ref split2[index], 2);
                         if (similarity <= 40) continue;
-                        result += split2[index] +";; ";
+                        result[shift++] = split2[index];
                         break;
                     }
                 }
-                return result.Length == 0 ? "" : "; found plagiarism: " + result;
+                return result;
             }
             catch (Exception)
             {
-                return " fail";
+                return null;
             }
         }
 
@@ -483,16 +486,14 @@ namespace plagiarism
                     var comparer = new BackgroundWorker();
                     comparer.DoWork += ComparerOnDoWork;
                     comparer.RunWorkerCompleted += (sender, args) =>
-                    {
-                        Monitor.Enter(_resultboxblock);
-                        compared++;
-                        if (!args.Result.Equals(""))
                         {
-                            resultbox.Items.Insert(0, args.Result);
-                        }
-                        if (progressBar1.Value + (100 - 40) / fileInfos.Count() < 100)
-                            progressBar1.Value += (100 - 40) / fileInfos.Count();
-                        Monitor.Exit(_resultboxblock);
+                            var results = (Results)args.Result;
+                            Monitor.Enter(_resultboxblock);
+                            compared++;
+                                resultbox.Items.Insert(0, results.ToFormatString());
+                            if (progressBar1.Value + (100 - 40) / fileInfos.Count() < 100)
+                                progressBar1.Value += (100 - 40) / fileInfos.Count();
+                            Monitor.Exit(_resultboxblock);
                     };
                     comparer.RunWorkerAsync(fileInfo.FullName);
                 }
@@ -520,7 +521,7 @@ namespace plagiarism
 
         private void button1_Click(object sender, EventArgs e)
         {
-            openFileDialog1.InitialDirectory = Directory.GetCurrentDirectory() + "/Collection";
+            openFileDialog1.InitialDirectory = Directory.GetCurrentDirectory() + "./Collection";
             openFileDialog1.ShowDialog();
         }
 
@@ -601,9 +602,7 @@ namespace plagiarism
         private void OnCompleted(object o, RunWorkerCompletedEventArgs args)
         {
             cur_op.Text = @"Завершено";
-            Monitor.Enter(_progressbarblock);
             progressBar1.Value = 100;
-            Monitor.Exit(_progressbarblock);
             _timer.Stop();
             GC.Collect();
         }
@@ -676,14 +675,28 @@ namespace plagiarism
     }
     public class Results
     {
-        public Results(string filename, double similarity, int level, string[] sentences, string fail)
+        public Results(string filename, double similarity, int level, string[] sentences, string fail, bool plagiarism)
         {
+            Plagiarism = plagiarism;
             Filename = filename;
             Similarity = similarity;
             Level = level;
             PlagiarisedSentences = sentences;
             Fail = fail;
         }
+        public string ToFormatString()
+        {
+            if (Fail == null)
+            {
+                return Filename + ". Plagiarism: "+ (Plagiarism ? 1 : 0) + ". Similarity: " + Similarity + ". Level: " + Level;
+            }
+            else
+            {
+                return Filename + ": " + Fail;
+            }
+        }
+
+        private readonly bool Plagiarism;
         public string Filename;
         public double Similarity;
         public int Level;
