@@ -18,21 +18,14 @@ namespace plagiarism
         /// <param name="s2"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static double CompareStrings(ref string s1, ref string s2, int length)
+        public static double CompareStrings(string s1, string s2, int length)
         {
-            HashSet<string> shingles1, shingles2;
-            if (Checkinputfile)
-            {
-                shingles1 = GetShingles(ref s1, length);
+            HashSet<string> 
+                shingles1 = GetShingles(ref s1, length),
                 shingles2 = GetShingles(ref s2, length);
-            }
-            else
-            {
-                shingles1 = GetShingles(ref s2, length);
-                shingles2 = GetShingles(ref s1, length);
-            }
-            var same = shingles1.Count(shingles2.Contains);
-            return same/((double) (shingles1.Count()))*100;
+            return Checkinputfile
+                ? shingles1.Count(shingles2.Contains)/((double) (shingles1.Count()))*100
+                : shingles2.Count(shingles1.Contains)/((double) (shingles2.Count()))*100;
         }
 
         /// <summary>
@@ -55,7 +48,7 @@ namespace plagiarism
             {
                 return shingles;
             }
-            for (int j = 0; j < shingleLength; j++)
+            for (var j = 0; j < shingleLength; j++)
             {
                 tmp += split[j];
             }
@@ -67,7 +60,6 @@ namespace plagiarism
                 shingles.Add(tmp = sb.ToString());
             }
             return shingles;
-
         }     
     }
 }

@@ -12,7 +12,6 @@ namespace plagiarism
         [STAThread]
         static void Main()
         {
-            Directory.CreateDirectory("./InputFiles");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Main());

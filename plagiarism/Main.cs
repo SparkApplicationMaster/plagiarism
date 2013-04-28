@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,29 +13,17 @@ using Wintellect.PowerCollections;
 using org.apache.pdfbox.pdmodel;
 using org.apache.pdfbox.util;
 using Timer = System.Windows.Forms.Timer;
-
 namespace plagiarism
 {
     public partial class Main : Form
     {
         private const string Delims = " -=.,_{}*\\\n\r\"/?[];:()!\'’”„";
-        private static readonly string[] Refs = new string[50];
-        private bool _showFullResults;
-        private volatile int _checkedfiles;
-        private string _collectfilesformat;
-        private int _filesneeded;
-        private string _inputText = new string('\0', 0);
-        private int _index;
-        private int _needed;
+        private string _inputText;
         private string [] _splitinputtext;
-        private string _response;
-        private StreamReader _sr;
-        private StreamWriter _sw;
         private double _time;
         private Timer _timer;
         private readonly object _resultboxblock = new object();
         private readonly object _inputtextblock = new object();
-        private readonly object _progressbarblock = new object();
         public Main()
         {
             InitializeComponent();
@@ -125,9 +112,8 @@ namespace plagiarism
                 vals.Add(i.Value);
                 trueVals.Add(i.Value);
             }
-            count = dictWordCount.Count;
-            var rus = _inputText.IndexOfAny("абвгдеёжзиёклмнопрстуфхцчшщьыъэюя".ToCharArray());
-            var stemmer = rus == -1 ? (IStemmer)new EnglishStemmer() : new RussianStemmer();
+            var stemmer = _inputText.IndexOfAny("абвгдеёжзиёклмнопрстуфхцчшщьыъэюя".ToCharArray()) == -1 
+                ? (IStemmer)new EnglishStemmer() : new RussianStemmer();
             for (var i = 1; i < count; i++)
             {
                 if (stemmer.Stem(keys[i]) != stemmer.Stem(keys[i - 1])) continue;
@@ -139,117 +125,95 @@ namespace plagiarism
                 vals[i] += vals[i - 1];
                 keys.RemoveAt(i - 1);
                 vals.RemoveAt(i - 1);
-                trueVals.RemoveAt(i - 1);
-                i--;
+                trueVals.RemoveAt(i-- - 1);
                 count--;
             }
             var keyWords = new OrderedMultiDictionary<int, string>
             (true, (i, i1) => -i.CompareTo(i1), (s, s1) => String.Compare(s, s1, StringComparison.Ordinal));
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 keyWords.Add(vals[i], keys[i]);
-                if (i > 10)
-                {
-                    keyWords.Remove(keyWords.Last().Key, keyWords.Last().Value.Last());
-                }
+                if (i > 10) keyWords.Remove(keyWords.Last().Key, keyWords.Last().Value.Last());
             }
             var keywords = keyWords.SelectMany(i => i.Value).Aggregate("", (current, j) => current + (j + "+"));
-            _sw = new StreamWriter("./programfiles/top_ten.fail");
-            _sw.Write(keywords);
-            _sw.Close();
+            File.CreateText("./programfiles/top_ten.fail").Write(keywords);
             return keywords;
         }
 
         /// <summary>
-        /// Делает запрос в Google по ключевым словам на получение страниц со ссылками
+        /// Делает запрос в Google на получение ссылок на PDF-файлы
         /// </summary>
         /// <returns></returns>
-        private void GoogleRequest()
+        private List<string> GetReferences(int filesToDownloadCount)
         {
             var reqstr = GetKeywords();
-            _response = "";
-            for (var i = 0; i < 30; i += 10)
+            var webPages = "";
+            for (var i = 0; i < filesToDownloadCount +
+                (filesToDownloadCount % 10 == 0 ? 0 : 10 - filesToDownloadCount); i += 10)
             {
                 var request = WebRequest.Create("http://www.google.com/search?q="
                                                 + reqstr + "filetype:pdf" + "&start=" + i);
                 request.Method = "GET";
                 var response = request.GetResponse();
                 var dataStream = response.GetResponseStream();
-                if (dataStream == null) continue;
-                var reader = new StreamReader(dataStream, Encoding.UTF8);
-                _response += reader.ReadToEnd();
+                if (dataStream == null) return null;
+                var reader = new StreamReader(dataStream);
+                webPages += reader.ReadToEnd();
                 reader.Close();
                 dataStream.Close();
                 response.Close();
             }
-//             _sw = new StreamWriter("./programfiles/google_response.html");
-//             _sw.WriteLine(_response);
-//             _sw.Close();
-        }
-
-        /// <summary>
-        /// Выдирает из HTML кода ссылки на PDF-файлы
-        /// </summary>
-        /// <returns></returns>
-        private void GetReferences()
-        {
-            _sw = new StreamWriter("./programfiles/refs.fail", false, Encoding.UTF8);
-            _index = 0;
-            for (var i = 0; i < _response.Length - 6; i++)
+            File.CreateText("./programfiles/google_response.html").Write(webPages);
+            var references = new List<string>(filesToDownloadCount);
+            for (var i = 0; i < webPages.Length - 6; i++)
             {
-                if (_response.Substring(i, 6) != "url?q=") continue;
+                if (webPages.Substring(i, 6) != "url?q=") continue;
                 int j;
-                for (j = i + 6; j < _response.Length && _response[j] != '&'; j++)
+                for (j = i + 6; j < webPages.Length && webPages[j] != '&'; j++)
                 {
                 }
-                if (_response.Substring(j - 3, 3) != "pdf") continue;
-                Refs[_index] = _response.Substring(i + 6, j - i - 6);
-                Refs[_index] = HttpUtility.UrlDecode(Refs[_index]);
-                _sw.WriteLine(Refs[_index]);
-                _index++;
+                if (webPages.Substring(j - 3, 3) != "pdf") continue;
+                references.Add(HttpUtility.UrlDecode(webPages.Substring(i + 6, j - i - 6)));
                 i = j;
             }
-            _sw.Close();
+            return references;
         }
 
         /// <summary>
-        /// Многопоточно скачивает файлы и проверяет каждый на сходство с исходным
+        /// Многопоточно скачивает нужное количество файлов и проверяет каждый на сходство с исходным
         /// </summary>
-        /// /// <param name="x"></param>
+        /// <param name="filesToDownloadCount"></param>
         /// <returns></returns>
-        private void DownloadAndCheck(int x = 0)
+        private void DownloadAndCheck(int filesToDownloadCount)
         {
-            var foundFilesCount = x > _index ? _index : x;
-            _checkedfiles = 0;
-            _sr = new StreamReader("./programfiles/refs.fail", Encoding.UTF8);
-            for (var i = 0; i < foundFilesCount; i++)
+            var references = GetReferences(filesToDownloadCount);
+            var backloader = new BackgroundWorker[references.Count()];
+            int index = 0;
+            foreach (var reference in references)
             {
-                var backloader = new BackgroundWorker();
-                backloader.DoWork += BackloaderOnDoWork;
-                backloader.RunWorkerCompleted += BackloaderOnRunWorkerCompleted;
+                backloader[index] = new BackgroundWorker();
+                backloader[index].DoWork += BackloaderOnDoWork;
+                backloader[index].RunWorkerCompleted += (sender, args) =>
+                    {
+                        Monitor.Enter(_resultboxblock);
+                        if (args != null) resultbox.Items.Insert(0, ((Results) args.Result).ToText());
+                        progressBar1.Value += (100 - progressBar1.Value)/Convert.ToInt32(filescount.SelectedItem);
+                        Monitor.Exit(_resultboxblock);
+                    };
                 try
                 {
-                    var refenence = _sr.ReadLine();
-                    backloader.RunWorkerAsync(refenence);
-                    _needed++;
+                    backloader[index].RunWorkerAsync(reference);
                 }
                 catch (Exception)
                 {
-                    _needed--;
                 }
+                index++;
             }
-            _sr.Close();
-            while (_checkedfiles < _needed)
+            Thread.SpinWait(100);
+            while (!Equals(backloader.Count(worker => worker.IsBusy), 0))
             {
             }
-            _sw = new StreamWriter("./programfiles/results.fail");
-            foreach (var stat in resultbox.Items)
-            {
-                _sw.WriteLine(stat);
-            }
-            _sw.Close();
-            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
         /// <summary>
@@ -273,37 +237,32 @@ namespace plagiarism
                 }
                 else
                 {
-                    doWorkEventArgs.Result = new Results(filename, 0, 0, null, "Файл слишком большой или кривой", false);
+                    doWorkEventArgs.Result = new Results(filename, 0, 0, "Файл слишком большой или кривой", false);
                     return;
                 }
                 doWorkEventArgs.Result = ShingleDetect("./Collection/" + filename);
             }
             catch (WebException)
             {
-                doWorkEventArgs.Result = new Results(filename, 0, 0, null, "Ошибка связи с веб-ресурсом", false);
+                doWorkEventArgs.Result = new Results(filename, 0, 0, "Ошибка связи с веб-ресурсом", false);
             }
             catch (Exception)
             {
-                doWorkEventArgs.Result = new Results(filename, 0, 0, null, "Ошибка проверки", false);
+                doWorkEventArgs.Result = new Results(filename, 0, 0, "Ошибка проверки", false);
             }
         }
 
-        /// <summary>
-        /// Оповещение о том,что поток завершил работу
-        /// </summary>
-        /// <returns></returns>
-        private void BackloaderOnRunWorkerCompleted(object sender,
-            RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
+        private void WriteResultsToFile()
         {
-            Monitor.Enter(_resultboxblock);
-            if (runWorkerCompletedEventArgs != null)
-                resultbox.Items.Insert(0, ((Results) runWorkerCompletedEventArgs.Result).ToFormatString());
-            if (progressBar1.Value + (100 - 12) / _needed <= 100)
+            using (var sw = new StreamWriter("./programfiles/results.fail"))
             {
-                progressBar1.Value += (100 - 12) / _needed;
+                foreach (var stat in resultbox.Items)
+                {
+                    sw.WriteLine(stat);
+                }
+                sw.Close();
             }
-            _checkedfiles++;
-            Monitor.Exit(_resultboxblock);
+            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
         /// <summary>
@@ -320,72 +279,44 @@ namespace plagiarism
             {
                 compText = ReadFile(filename);
             }
-            catch (Exception e)
+            catch
             {
-                return new Results(filename, 0, 0, null, "fail", false);
+                return new Results(filename, 0, 0, "fail", false);
             }
             Monitor.Enter(_inputtextblock);
             var fulltext = _inputText;
             Monitor.Exit(_inputtextblock);
-            var similarity = new double[4];
+            var similarity = new double[2];
             var info = new FileInfo(filename);
-            similarity[0] = Shingles.CompareStrings(ref fulltext, ref compText, 1);
-            Results results = null;
+            similarity[0] = Shingles.CompareStrings(fulltext, compText, 1);
+            Results results;
             string[] foundPlagiarism = null;
-            if (_showFullResults)
+            var fullResults = showFullResults.Checked;
+            if (fullResults)
             {
-                foundPlagiarism = FindPlagiarism(ref fulltext, ref compText);
+                foundPlagiarism = FindPlagiarism(fulltext, compText);
             }
             if (similarity[0] < similarityLow1Stage)
             {
-                results = new Results(info.Name, similarity[0], 1, null, null, false);
-                if (_showFullResults)
+                results = new Results(info.Name, similarity[0], 1, null, false);
+                if (fullResults)
                 {
                     results.PlagiarisedSentences = foundPlagiarism;
                 }
                 return results;
             }
-            similarity[1] = Shingles.CompareStrings(ref fulltext, ref compText, 3);
+            similarity[1] = Shingles.CompareStrings(fulltext, compText, 3);
             if (similarity[1] < similarityLow2Stage)
             {
-                results = new Results(info.Name, similarity[1], 2, null, null, false);
-                if (_showFullResults)
+                results = new Results(info.Name, similarity[1], 2, null, false);
+                if (fullResults)
                 {
                     results.PlagiarisedSentences = foundPlagiarism;
                 }
                 return results;
             }
-            if (similarity[1] < 45)
-            {
-                results = new Results(info.Name, similarity[1], 2, null, null, true);
-                if (_showFullResults)
-                {
-                    results.PlagiarisedSentences = foundPlagiarism;
-                }
-                return results;
-            }
-
-            similarity[2] = Shingles.CompareStrings(ref fulltext, ref compText, 10);
-            if (similarity[2] < 60)
-            {
-                results = new Results(info.Name, similarity[2], 3, null, null, true);
-                if (_showFullResults)
-                {
-                    results.PlagiarisedSentences = foundPlagiarism;
-                }
-                return results;
-            }
-            if (similarity[2] < 85)
-            {
-                results = new Results(info.Name, similarity[2], 3, null, null, true);
-                if (_showFullResults)
-                {
-                    results.PlagiarisedSentences = foundPlagiarism;
-                }
-                return results;
-            }
-            results = new Results(info.Name, similarity[2], 3, null, null, true);
-            if (_showFullResults)
+            results = new Results(info.Name, similarity[1], 2, null, true);
+            if (fullResults)
             {
                 results.PlagiarisedSentences = foundPlagiarism;
             }
@@ -399,7 +330,7 @@ namespace plagiarism
         /// <param name="inputtext"></param>
         /// <param name="comptext"></param>
         /// <returns></returns>
-        private string[] FindPlagiarism(ref string inputtext, ref string comptext)
+        private string[] FindPlagiarism(string inputtext, string comptext)
         {
             var separator = new string[5];
             try
@@ -409,20 +340,18 @@ namespace plagiarism
                 separator[2] = "!";
                 separator[3] = "?";
                 separator[4] = ".";
-                int shift = 0;
+                var shift = 0;
                 if (testbutton.Checked || _splitinputtext == null)
                 {
                     _splitinputtext = inputtext.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                 }
                 var split2 = comptext.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                 var result = new string[_splitinputtext.Length];
-                for (int i = 0; i < _splitinputtext.Length; i++)
+                foreach (string t in _splitinputtext)
                 {
-                    for (int index = 0; index < split2.Length; index++)
+                    foreach (string t1 in split2.Where(t1 => !(Shingles.CompareStrings(t, t1, 2) <= 40)))
                     {
-                        var similarity = (int)Shingles.CompareStrings(ref _splitinputtext[i], ref split2[index], 2);
-                        if (similarity <= 40) continue;
-                        result[shift++] = split2[index];
+                        result[shift++] = t1;
                         break;
                     }
                 }
@@ -442,7 +371,7 @@ namespace plagiarism
         {
             var compared = 0;
             var dirInfo = new DirectoryInfo("./Collection");
-            var enumeratefiles = dirInfo.EnumerateFiles("*." + _collectfilesformat);
+            var enumeratefiles = dirInfo.EnumerateFiles("*." + filesformat.SelectedItem);
             var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
             foreach (var fileinfo in fileInfos)
             {
@@ -452,12 +381,8 @@ namespace plagiarism
                 {
                     Monitor.Enter(_resultboxblock);
                     compared++;
-                    if (!args.Result.Equals(""))
-                    {
-                        resultbox.Items.Insert(0, args.Result);
-                    }
-                    if (progressBar1.Value + (100 - 40) / fileInfos.Count() < 100)
-                        progressBar1.Value += (100 - 40) / fileInfos.Count();
+                    resultbox.Items.Insert(0, args.Result);
+                    progressBar1.Value += (100 - 40) / fileInfos.Count();
                     Monitor.Exit(_resultboxblock);
                 };
                 comparer.RunWorkerAsync(fileinfo.FullName);
@@ -465,13 +390,6 @@ namespace plagiarism
             while (compared < fileInfos.Count())
             {
             }
-            _sw = new StreamWriter("./programfiles/results.fail");
-            foreach (var stat in resultbox.Items)
-            {
-                _sw.WriteLine(stat);
-            }
-            _sw.Close();
-            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
         /// <summary>
@@ -480,14 +398,13 @@ namespace plagiarism
         /// <returns></returns>
         private void Test()
         {
-            for (char i = 'a'; i <= 'e'; i++)
+            for (var i = 'a'; i <= 'e'; i++)
             {
                 var compared = 0;
                 _inputText = ReadFile("./Testset/InputFiles/orig_task" + i + ".txt");
                 var dirInfo = new DirectoryInfo("./Testset/Collection");
-                var enumeratefiles = dirInfo.EnumerateFiles("*" + i + ".txt");
-                var fileInfos = enumeratefiles as IList<FileInfo> ?? enumeratefiles.ToList();
-                foreach (var fileInfo in enumeratefiles)
+                var fileInfos = dirInfo.EnumerateFiles("*" + i + ".txt").ToList();
+                foreach (var fileInfo in fileInfos)
                 {
                     var comparer = new BackgroundWorker();
                     comparer.DoWork += ComparerOnDoWork;
@@ -496,9 +413,8 @@ namespace plagiarism
                             var results = (Results)args.Result;
                             Monitor.Enter(_resultboxblock);
                             compared++;
-                                resultbox.Items.Insert(0, results.ToFormatString());
-                            if (progressBar1.Value + (100 - 40) / fileInfos.Count() < 100)
-                                progressBar1.Value += (100 - 40) / fileInfos.Count();
+                                resultbox.Items.Insert(0, results.ToText());
+                                progressBar1.Value += (100 - progressBar1.Value) / fileInfos.Count();
                             Monitor.Exit(_resultboxblock);
                     };
                     comparer.RunWorkerAsync(fileInfo.FullName);
@@ -507,13 +423,6 @@ namespace plagiarism
                 {
                 }
             }
-            _sw = new StreamWriter("./programfiles/results.fail");
-            foreach (var stat in resultbox.Items)
-            {
-                _sw.WriteLine(stat);
-            }
-            _sw.Close();
-            resultbox.Items.Insert(0, "Результаты были скопированы в файл results.fail в папке programfiles");
         }
 
         /// <summary>
@@ -534,14 +443,13 @@ namespace plagiarism
         private void start_Click(object sender, EventArgs e)
         {
             panel2.Visible = false;
-            backgroundWorker1.ProgressChanged += OnChanged;
-            backgroundWorker1.RunWorkerCompleted += OnCompleted;
+            mainWorker.ProgressChanged += OnChanged;
+            mainWorker.RunWorkerCompleted += OnCompleted;
             _timer = new Timer {Interval = 1000};
             _timer.Tick += TimerOnTick;
-            timerlabel.Click += (o, args) => _time--;
             _timer.Start();
             panel3.Visible = true;
-            backgroundWorker1.RunWorkerAsync();
+            mainWorker.RunWorkerAsync();
         }
 
         /// <summary>
@@ -556,12 +464,10 @@ namespace plagiarism
             }
             else
             {
-                backgroundWorker1.ReportProgress(0);
+                mainWorker.ReportProgress(0);
                 ReadInputFile(openFileDialog1.FileName);
-                backgroundWorker1.ReportProgress(10);
-                backgroundWorker1.ReportProgress(12);
-                GoogleRequest();
-                GetReferences();
+                mainWorker.ReportProgress(10);
+                mainWorker.ReportProgress(12);
                 if (googlebutton.Checked)
                 {
                     if (deletecheck.Checked)
@@ -573,13 +479,14 @@ namespace plagiarism
                             try { fileinfo.Delete(); } catch (IOException) {}
                         }
                     }
-                    DownloadAndCheck(_filesneeded);
+                    DownloadAndCheck(Convert.ToInt32(filescount.SelectedItem));
                 }
                 else
                 {
                     StatisticCollect();
                 }
             }
+            WriteResultsToFile();
         }
 
         private void OnChanged(object o, ProgressChangedEventArgs args)
@@ -620,20 +527,10 @@ namespace plagiarism
             timerlabel.Text += _time;
         }
 
-        private void progressBar1_Click(object sender, EventArgs e)
-        {
-            if (progressBar1.Value < 100)
-            {
-                progressBar1.Value++;
-            }
-        }
-
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             filenamelabel.Visible = true;
-            var filename = openFileDialog1.FileName;
-            filename = filename.Substring(filename.LastIndexOf('\\') + 1);
-            filenamelabel.Text = @"Файл выбран: " + filename;
+            filenamelabel.Text = @"Файл выбран: " + new FileInfo(openFileDialog1.FileName).Name;
         }
 
         private void googlebutton_CheckedChanged(object sender, EventArgs e)
@@ -646,16 +543,6 @@ namespace plagiarism
         {
             collectionsettings.Visible = true;
             googlesettings.Visible = false;
-        }
-
-        private void filescount_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _filesneeded = Convert.ToInt32(filescount.SelectedItem);
-        }
-
-        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _collectfilesformat = (string) filesformat.SelectedItem;
         }
 
         private void radioButton2_CheckedChanged(object sender, EventArgs e)
@@ -673,40 +560,31 @@ namespace plagiarism
             Shingles.Checkinputfile = false;
             resultbox.Sorted = true;
         }
-
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-            _showFullResults = checkBox1.Checked;
-        }
     }
     public class Results
     {
-        public Results(string filename, double similarity, int level, string[] sentences, string fail, bool plagiarism)
+        public Results(string filename, double similarity, int level, string fail, bool plagiarism)
         {
-            Plagiarism = plagiarism;
-            Filename = filename;
-            Similarity = similarity;
-            Level = level;
-            PlagiarisedSentences = sentences;
-            Fail = fail;
+            _plagiarism = plagiarism;
+            _filename = filename;
+            _similarity = similarity;
+            _level = level;
+            _fail = fail;
         }
-        public string ToFormatString()
+        public string ToText()
         {
-            if (Fail == null)
+            if (_fail == null)
             {
-                return Filename + ". Plagiarism: "+ (Plagiarism ? 1 : 0) + ". Similarity: " + Similarity + ". Level: " + Level;
+                return _filename + ". Plagiarism: "+ (_plagiarism ? 1 : 0) + ". Similarity: " + _similarity + ". Level: " + _level;
             }
-            else
-            {
-                return Filename + ": " + Fail;
-            }
+            return _filename + ": " + _fail;
         }
 
-        private readonly bool Plagiarism;
-        public string Filename;
-        public double Similarity;
-        public int Level;
+        private readonly bool _plagiarism;
+        private readonly string _filename;
+        private readonly double _similarity;
+        private readonly int _level;
         public string[] PlagiarisedSentences;
-        public string Fail;
+        private readonly string _fail;
     }
 }

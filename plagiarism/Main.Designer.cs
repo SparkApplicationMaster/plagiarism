@@ -27,8 +27,6 @@ namespace plagiarism
         {
             if (disposing && (components != null))
             {
-                _sr.Dispose();
-                _sw.Dispose();
                 components.Dispose();
             }
             base.Dispose(disposing);
@@ -44,7 +42,7 @@ namespace plagiarism
         {
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.showFullResults = new System.Windows.Forms.CheckBox();
             this.collectionsettings = new System.Windows.Forms.Panel();
             this.panel12 = new System.Windows.Forms.Panel();
             this.label8 = new System.Windows.Forms.Label();
@@ -80,7 +78,7 @@ namespace plagiarism
             this.cur_op = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.mainWorker = new System.ComponentModel.BackgroundWorker();
             this.panel2.SuspendLayout();
             this.collectionsettings.SuspendLayout();
             this.panel12.SuspendLayout();
@@ -99,7 +97,7 @@ namespace plagiarism
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.checkBox1);
+            this.panel2.Controls.Add(this.showFullResults);
             this.panel2.Controls.Add(this.collectionsettings);
             this.panel2.Controls.Add(this.panel11);
             this.panel2.Controls.Add(this.googlesettings);
@@ -113,16 +111,15 @@ namespace plagiarism
             this.panel2.Size = new System.Drawing.Size(706, 320);
             this.panel2.TabIndex = 6;
             // 
-            // checkBox1
+            // showFullResults
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(14, 68);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(216, 17);
-            this.checkBox1.TabIndex = 16;
-            this.checkBox1.Text = "Показать расширенные результаты?";
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            this.showFullResults.AutoSize = true;
+            this.showFullResults.Location = new System.Drawing.Point(14, 68);
+            this.showFullResults.Name = "showFullResults";
+            this.showFullResults.Size = new System.Drawing.Size(216, 17);
+            this.showFullResults.TabIndex = 16;
+            this.showFullResults.Text = "Показать расширенные результаты?";
+            this.showFullResults.UseVisualStyleBackColor = true;
             // 
             // collectionsettings
             // 
@@ -164,7 +161,6 @@ namespace plagiarism
             this.filesformat.Name = "filesformat";
             this.filesformat.Size = new System.Drawing.Size(39, 21);
             this.filesformat.TabIndex = 7;
-            this.filesformat.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
             // 
             // collectionbutton
             // 
@@ -299,7 +295,6 @@ namespace plagiarism
             this.filescount.Name = "filescount";
             this.filescount.Size = new System.Drawing.Size(35, 21);
             this.filescount.TabIndex = 7;
-            this.filescount.SelectedIndexChanged += new System.EventHandler(this.filescount_SelectedIndexChanged);
             // 
             // panel5
             // 
@@ -497,22 +492,21 @@ namespace plagiarism
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(443, 34);
             this.progressBar1.TabIndex = 0;
-            this.progressBar1.Click += new System.EventHandler(this.progressBar1_Click);
             // 
-            // backgroundWorker1
+            // mainWorker
             // 
-            this.backgroundWorker1.WorkerReportsProgress = true;
-            this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
+            this.mainWorker.WorkerReportsProgress = true;
+            this.mainWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
             // 
-            // Form1
+            // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(704, 319);
-            this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
+            this.Controls.Add(this.panel3);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Name = "Form1";
+            this.Name = "Main";
             this.Text = "Plagiarism";
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
@@ -554,7 +548,7 @@ namespace plagiarism
         private System.Windows.Forms.Label timer;
         private System.Windows.Forms.Label seconds;
         private System.Windows.Forms.Label timerlabel;
-        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.ComponentModel.BackgroundWorker mainWorker;
         private System.Windows.Forms.Panel panel6;
         private System.Windows.Forms.Label filenamelabel;
         private System.Windows.Forms.Label finishlabel;
@@ -576,7 +570,7 @@ namespace plagiarism
         private System.Windows.Forms.ComboBox filesformat;
         public RadioButton radioButton2;
         private RadioButton testbutton;
-        private CheckBox checkBox1;
+        private CheckBox showFullResults;
     }
 }
 
